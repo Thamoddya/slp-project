@@ -1,0 +1,34 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // An admin is any signed-in user listed in /admins/{uid}.
+    function isAdmin() {
+      return request.auth != null
+        && exists(/databases/$(database)/documents/admins/$(request.auth.uid));
+    }
+    function isSuperAdmin() {
+      return isAdmin()
+        && get(/databases/$(database)/documents/admins/$(request.auth.uid)).data.role == 'superadmin';
+    }
+
+    // Public, routable network: anyone may READ; only admins may WRITE.
+    match /nodes/{id}    { allow read: if true; allow write: if isAdmin(); }
+    match /segments/{id} { allow read: if true; allow write: if isAdmin(); }
+    match /dansal/{id}   { allow read: if true; allow write: if isAdmin(); }
+    match /parking/{id}  { allow read: if true; allow write: if isAdmin(); }
+    match /config/{id}   { allow read: if true; allow write: if isAdmin(); }
+
+    // Admin roster: only superadmins manage it.
+    match /admins/{uid} {
+      allow read:  if isAdmin();
+      allow write: if isSuperAdmin();
+    }
+
+    // Public problem reports: anyone may CREATE; only admins may read/update.
+    match /reports/{id} {
+      allow create: if true;
+      allow read, update, delete: if isAdmin();
+    }
+  }
+}

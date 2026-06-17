@@ -1,0 +1,125 @@
+{
+  "app": {
+    "title": "Poson Route Guidance",
+    "subtitle": "Anuradhapura · Sri Lanka Police",
+    "offlineBanner": "Offline — data may be outdated. Last updated {{time}}.",
+    "loading": "Loading map and road network…"
+  },
+  "lang": { "toggle": "සිංහල", "current": "English" },
+  "nav": { "public": "Routes", "admin": "Admin" },
+  "home": {
+    "useLocation": "Use my live location",
+    "locating": "Getting your location…",
+    "pickDestination": "Where do you want to go?",
+    "searchPlaceholder": "Search a place or tap the map",
+    "go": "GO",
+    "from": "From",
+    "to": "To",
+    "tapMapHint": "Tap a marker or the map to set your destination",
+    "myLocation": "My location"
+  },
+  "route": {
+    "distance": "Distance",
+    "eta": "Est. time",
+    "minutes": "{{n}} min",
+    "km": "{{n}} km",
+    "meters": "{{n}} m",
+    "stepsTitle": "Turn-by-turn (legal one-way)",
+    "noRoute": "No legal one-way route to this destination right now.",
+    "noRouteHint": "A road may be closed or one-way against you. Try the nearest reachable exit.",
+    "farFromNetwork": "You are outside the route zone.",
+    "farHint": "Head to the nearest entry point shown on the map, then tap GO again.",
+    "rerouted": "Your route changed — a road ahead was closed.",
+    "newRoute": "Plan a new route",
+    "via": "via"
+  },
+  "filters": {
+    "title": "Show on route",
+    "dansal": "Dansal",
+    "parking": "Parking",
+    "vehicle": "Vehicle",
+    "all": "All"
+  },
+  "dansal": {
+    "title": "Dansal along the route",
+    "none": "No active Dansal on this route.",
+    "type": { "food": "Food", "drink": "Drink", "water": "Water", "medical": "Medical", "other": "Other" },
+    "inactive": "Closed",
+    "open": "Open: {{hours}}"
+  },
+  "parking": {
+    "title": "Parking along the route",
+    "none": "No parking listed on this route.",
+    "capacity": "{{n}} spaces",
+    "status": { "available": "Available", "filling": "Filling", "full": "Full" }
+  },
+  "vehicle": { "car": "Car", "bus": "Bus", "threewheeler": "Three-wheeler", "motorbike": "Motorbike" },
+  "report": {
+    "button": "Report a problem",
+    "title": "Report a problem",
+    "placeholder": "Describe the issue (wrong direction, blocked road, etc.)",
+    "submit": "Send report",
+    "thanks": "Thank you. Your report was sent to the Police control room.",
+    "locationNote": "Your current location is attached to help us respond."
+  },
+  "disclaimer": "Follow Police officers and on-site signs at all times. This guide reflects the official one-way plan but conditions can change.",
+  "admin": {
+    "login": "Admin Login",
+    "email": "Email",
+    "password": "Password",
+    "signIn": "Sign in",
+    "signOut": "Sign out",
+    "loginError": "Login failed. Check your credentials.",
+    "demoNote": "Demo mode: use admin@police.lk / poson2026",
+    "tabs": { "editor": "Map Editor", "control": "Live Control", "validate": "Validation", "data": "Backup" },
+    "editor": {
+      "title": "Map Editor",
+      "mode": "Tool",
+      "modeNode": "Add junction",
+      "modeSegment": "Draw one-way road",
+      "modeDansal": "Add Dansal",
+      "modeParking": "Add parking",
+      "modeView": "Select / move",
+      "nameSi": "Name (Sinhala)",
+      "nameEn": "Name (English)",
+      "isEntry": "Entry point",
+      "isExit": "Exit point",
+      "segmentFrom": "Pick the FROM junction, then trace the road, then pick the TO junction.",
+      "segmentDirection": "Direction: traffic flows FROM → TO only.",
+      "save": "Save",
+      "cancel": "Cancel",
+      "delete": "Delete",
+      "length": "Length: {{n}} m",
+      "uploadOverlay": "Overlay reference map",
+      "overlayOpacity": "Overlay opacity"
+    },
+    "control": {
+      "title": "Live Control Board",
+      "segments": "Roads",
+      "dansal": "Dansal",
+      "parking": "Parking",
+      "open": "Open",
+      "closed": "Closed",
+      "active": "Active",
+      "inactive": "Off",
+      "lastChanged": "Changed {{time}}"
+    },
+    "validate": {
+      "title": "Network Validation",
+      "run": "Run checks",
+      "allGood": "All checks passed. Network is safe to publish.",
+      "unreachable": "Entry point cannot reach any exit: {{name}}",
+      "deadEnd": "Dead-end junction (no way out): {{name}}",
+      "deadStart": "Unreachable junction (no way in): {{name}}",
+      "orphan": "Isolated junction (no roads): {{name}}",
+      "duplicate": "Duplicate road {{from}} → {{to}}"
+    },
+    "data": {
+      "title": "Backup & Restore",
+      "export": "Export JSON",
+      "import": "Import JSON",
+      "importWarn": "This replaces the whole network. Continue?"
+    }
+  },
+  "units": { "km": "km", "m": "m", "min": "min" }
+}
