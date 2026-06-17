@@ -1,7 +1,7 @@
 {
   "name": "poson-route-guidance",
   "private": true,
-  "version": "1.0.0",
+  "version": "2.0.0",
   "type": "module",
   "description": "Poson One-Way Route Guidance — Sri Lanka Police, Anuradhapura 2026",
   "scripts": {
@@ -12,18 +12,36 @@
     "test:watch": "vitest"
   },
   "dependencies": {
+    "@radix-ui/react-dialog": "^1.1.1",
+    "@radix-ui/react-label": "^2.1.0",
+    "@radix-ui/react-select": "^2.1.0",
+    "@radix-ui/react-separator": "^1.1.0",
+    "@radix-ui/react-slot": "^1.1.0",
+    "@radix-ui/react-switch": "^1.1.0",
+    "@radix-ui/react-tabs": "^1.1.0",
+    "@vis.gl/react-google-maps": "^1.4.2",
+    "class-variance-authority": "^0.7.0",
+    "clsx": "^2.1.1",
     "firebase": "^10.12.0",
     "i18next": "^23.11.0",
     "idb-keyval": "^6.2.1",
-    "leaflet": "^1.9.4",
+    "lucide-react": "^0.400.0",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
     "react-i18next": "^14.1.0",
-    "react-leaflet": "^4.2.1",
-    "react-router-dom": "^6.23.0"
+    "react-router-dom": "^6.23.0",
+    "tailwind-merge": "^2.3.0"
   },
   "devDependencies": {
+    "@types/google.maps": "^3.55.0",
+    "@types/node": "^20.14.0",
+    "@types/react": "^18.3.3",
+    "@types/react-dom": "^18.3.0",
     "@vitejs/plugin-react": "^4.3.0",
+    "autoprefixer": "^10.4.19",
+    "postcss": "^8.4.38",
+    "tailwindcss": "^3.4.4",
+    "typescript": "^5.4.5",
     "vite": "^5.2.0",
     "vite-plugin-pwa": "^0.20.0",
     "vitest": "^1.6.0"
