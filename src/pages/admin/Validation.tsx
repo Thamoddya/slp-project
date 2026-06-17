@@ -50,17 +50,8 @@ export default function Validation({ net }: { net: NetworkState }) {
       <div className="p-4">
         {/* Run button */}
         <Button className="w-full" onClick={run} disabled={running} size="lg">
-          {running ? (
-            <span className="flex items-center gap-2">
-              <span className="h-4 w-4 animate-spin rounded-full border-2 border-white/30 border-t-white" />
-              {t("admin.validate.running")}
-            </span>
-          ) : (
-            <span className="flex items-center gap-2">
-              <RefreshCw className="h-4 w-4" />
-              {t("admin.validate.run")}
-            </span>
-          )}
+          <RefreshCw className={`h-4 w-4 mr-2 ${running ? "animate-spin" : ""}`} />
+          {running ? t("admin.validate.running") : t("admin.validate.run")}
         </Button>
 
         {/* Summary row */}
