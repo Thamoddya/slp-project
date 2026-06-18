@@ -1,7 +1,11 @@
 <!doctype html>
-<html lang="si">
+<html lang="si" translate="no">
   <head>
     <meta charset="UTF-8" />
+    <!-- App is bilingual via its own i18n toggle. Disable browser auto-translation,
+         which rewrites React-managed text nodes (wrapping them in <font> tags) and
+         causes "removeChild" crashes + garbled labels (e.g. "Dansal" → "Dancehall"). -->
+    <meta name="google" content="notranslate" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
     <meta name="theme-color" content="#1b3a72" />
@@ -16,7 +20,7 @@
     />
     <title>පොසොන් මාර්ග මඟ පෙන්වීම — අනුරාධපුර</title>
   </head>
-  <body>
+  <body class="notranslate">
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
   </body>

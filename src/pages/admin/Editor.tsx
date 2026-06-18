@@ -35,6 +35,8 @@ export default function Editor({ net }: { net: NetworkState }) {
   const [mode, setMode] = useState<EditorMode>("view");
   const [draft, setDraft] = useState<Draft | null>(null);
   const [panelOpen, setPanelOpen] = useState(true);
+  const [snapping, setSnapping] = useState(false);
+  const [snapError, setSnapError] = useState<string | null>(null);
   const [overlay, setOverlay] = useState<{ url: string; bounds: [[number, number], [number, number]]; opacity: number } | null>(null);
   const overlayInputRef = useRef<HTMLInputElement>(null);
 
@@ -124,6 +126,39 @@ export default function Editor({ net }: { net: NetworkState }) {
     setDraft(null);
   };
 
+  // Snap the drawn one-way street to the physical road shape. We only ask Google
+  // for the SHAPE of this single police-defined road (from → to, through any
+  // manual shape points as waypoints). Direction legality is still enforced
+  // entirely by the custom router — this just makes the polyline follow the road.
+  const snapToRoad = async () => {
+    if (draft?.kind !== "segment" || !draft.fromNodeId || !draft.toNodeId) return;
+    const from = nodeById[draft.fromNodeId];
+    const to = nodeById[draft.toNodeId];
+    if (!from || !to) return;
+    setSnapError(null);
+    setSnapping(true);
+    try {
+      const { DirectionsService } = (await window.google.maps.importLibrary("routes")) as google.maps.RoutesLibrary;
+      const svc = new DirectionsService();
+      const res = await svc.route({
+        origin: { lat: from.lat, lng: from.lng },
+        destination: { lat: to.lat, lng: to.lng },
+        waypoints: draft.points.map((p) => ({ location: { lat: p.lat, lng: p.lng }, stopover: false })),
+        travelMode: window.google.maps.TravelMode.DRIVING,
+      });
+      const path = res.routes[0]?.overview_path ?? [];
+      if (path.length < 2) throw new Error("empty");
+      // overview_path starts at `from` and ends at `to`; keep only the interior,
+      // since draftPolyline re-adds the from/to node coordinates.
+      const interior = path.slice(1, -1).map((ll) => ({ lat: ll.lat(), lng: ll.lng() }));
+      setDraft({ ...draft, points: interior });
+    } catch {
+      setSnapError("Couldn't snap to road. Enable the Directions API for this key, or trace the road by tapping shape points.");
+    } finally {
+      setSnapping(false);
+    }
+  };
+
   const currentMode = MODES.find((m) => m.id === mode)!;
   const segLen = draft?.kind === "segment" ? Math.round(polylineLengthMeters(draftPolyline)) : 0;
 
@@ -203,8 +238,9 @@ export default function Editor({ net }: { net: NetworkState }) {
           </div>
         )}
 
-        {/* Draft form */}
-        {draft && (draft.kind !== "segment" || draft.toNodeId) && (
+        {/* Draft form — always available for segments so From/To can be chosen
+            from the dropdowns as well as by clicking node pins on the map. */}
+        {draft && (
           <DraftForm
             draft={draft}
             setDraft={setDraft}
@@ -214,7 +250,10 @@ export default function Editor({ net }: { net: NetworkState }) {
             segLen={segLen}
             onSave={save}
             onDelete={del}
-            onCancel={() => setDraft(mode === "segment" ? { kind: "segment", fromNodeId: "", toNodeId: "", name_si: "", name_en: "", points: [] } : null)}
+            onSnap={snapToRoad}
+            snapping={snapping}
+            snapError={snapError}
+            onCancel={() => { setSnapError(null); setDraft(mode === "segment" ? { kind: "segment", fromNodeId: "", toNodeId: "", name_si: "", name_en: "", points: [] } : null); }}
           />
         )}
       </div>
@@ -256,7 +295,7 @@ export default function Editor({ net }: { net: NetworkState }) {
 
 // ─── Draft form ───────────────────────────────────────────────────────────────
 
-function DraftForm({ draft, setDraft, nodes, segments, lang, segLen, onSave, onDelete, onCancel }: {
+function DraftForm({ draft, setDraft, nodes, segments, lang, segLen, onSave, onDelete, onCancel, onSnap, snapping, snapError }: {
   draft: Draft;
   setDraft: (d: Draft | null) => void;
   nodes: NetworkNode[];
@@ -266,6 +305,9 @@ function DraftForm({ draft, setDraft, nodes, segments, lang, segLen, onSave, onD
   onSave: () => void;
   onDelete: () => void;
   onCancel: () => void;
+  onSnap: () => void;
+  snapping: boolean;
+  snapError: string | null;
 }) {
   const up = (patch: Partial<typeof draft>) => setDraft({ ...draft, ...patch } as Draft);
   const hasId = !!(draft as { id?: string }).id;
@@ -273,7 +315,7 @@ function DraftForm({ draft, setDraft, nodes, segments, lang, segLen, onSave, onD
   return (
     <div className="flex-1 overflow-y-auto p-4 space-y-3">
       <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">
-        {hasId ? "Edit" : "New"} {draft.kind}
+        {`${hasId ? "Edit" : "New"} ${draft.kind}`}
       </p>
 
       {(draft.kind === "node" || draft.kind === "dansal" || draft.kind === "parking") && (
@@ -317,6 +359,17 @@ function DraftForm({ draft, setDraft, nodes, segments, lang, segLen, onSave, onD
           <div className="rounded-xl bg-cream-50 border border-cream-200 px-3 py-2 text-xs text-muted-foreground">
             Length: {segLen}m · {draft.points.length} shape points
           </div>
+          <Button
+            type="button"
+            variant="outline"
+            className="w-full"
+            disabled={!draft.fromNodeId || !draft.toNodeId || snapping}
+            onClick={onSnap}
+          >
+            <Route className="mr-2 h-4 w-4" />
+            {snapping ? "Snapping…" : "Snap to road"}
+          </Button>
+          {snapError && <p className="text-[11px] leading-relaxed text-red-500">{snapError}</p>}
         </>
       )}
 
