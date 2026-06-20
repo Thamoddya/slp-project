@@ -135,13 +135,25 @@ export function planRoute(
     });
   }
 
+  // Outside the one-way zone: pilgrims legitimately approach entry points from
+  // far away, so fall back to routing from the nearest legal ENTRY node rather
+  // than refusing. (Direction correctness is unaffected — the route still runs
+  // strictly along the directed segments from that entry.)
+  let viaEntry = false;
   if (candidates.length === 0) {
-    return {
-      ok: false,
-      reason: "far-from-network",
-      entryNodeId: bestNode?.node?.id ?? null,
-      snappedPoint: bestSeg?.point ?? null,
-    };
+    const entries = nodes.filter((n) => n.isEntryPoint);
+    if (entries.length === 0) {
+      return {
+        ok: false,
+        reason: "far-from-network",
+        entryNodeId: bestNode?.node?.id ?? null,
+        snappedPoint: bestSeg?.point ?? null,
+      };
+    }
+    for (const n of entries) {
+      candidates.push({ nodeId: n.id, connector: haversineMeters(startPoint, n), alongMeters: 0 });
+    }
+    viaEntry = true;
   }
 
   let best: {
@@ -193,5 +205,6 @@ export function planRoute(
     segments: best.path.edges.map((e) => e.segment),
     polyline,
     snappedPoint: bestSeg?.point ?? null,
+    viaEntry,
   };
 }

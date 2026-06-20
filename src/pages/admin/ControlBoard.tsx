@@ -22,25 +22,27 @@ export default function ControlBoard({ net }: { net: NetworkState }) {
     repo.update("parking", p.id, { status });
 
   return (
-    <div className="flex flex-col h-full">
+    <div className="flex flex-col h-full w-full">
       {/* Sub-tabs */}
       <div className="flex gap-1 px-4 py-3 bg-cream-50 border-b border-cream-200 shrink-0">
-        {SECTION_KEYS.map((id) => (
-          <button
-            key={id}
-            onClick={() => setSub(id)}
-            className={`flex-1 rounded-lg py-2 text-xs font-semibold transition-all ${
-              sub === id
-                ? "bg-navy-700 text-white shadow-sm"
-                : "text-muted-foreground hover:bg-cream-100"
-            }`}
-          >
-            {t(`admin.control.${id}`)}
-          </button>
-        ))}
+        <div className="mx-auto flex w-full max-w-md gap-1">
+          {SECTION_KEYS.map((id) => (
+            <button
+              key={id}
+              onClick={() => setSub(id)}
+              className={`flex-1 rounded-lg py-2 text-xs font-semibold transition-all ${
+                sub === id
+                  ? "bg-navy-700 text-white shadow-sm"
+                  : "text-muted-foreground hover:bg-cream-100"
+              }`}
+            >
+              {t(`admin.control.${id}`)}
+            </button>
+          ))}
+        </div>
       </div>
 
-      <div className="flex-1 overflow-y-auto p-4 space-y-2">
+      <div className="flex-1 overflow-y-auto p-4 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 content-start">
         {/* ── Segments ─────────────────────────────────────────────────── */}
         {sub === "segments" &&
           net.segments.map((s) => (

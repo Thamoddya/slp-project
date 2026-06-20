@@ -1,6 +1,6 @@
 import { useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { MousePointer2, CircleDot, Route, UtensilsCrossed, ParkingSquare, ImagePlus, X, Save, Trash2, ChevronLeft, ChevronRight } from "lucide-react";
+import { MousePointer2, CircleDot, Route, UtensilsCrossed, ParkingSquare, ImagePlus, X, Save, Trash2, PanelLeftClose, PanelLeftOpen, Check, MapPin } from "lucide-react";
 import { AdminMapView } from "@/components/map/GoogleMapView";
 import repo from "@/data/repo";
 import { polylineLengthMeters } from "@/routing/geo";
@@ -19,12 +19,12 @@ type Draft =
   | { kind: "dansal"; id?: string; name_si: string; name_en: string; lat: number; lng: number; type: DansalType; active: boolean; openHours: string; nearestSegmentId: string }
   | { kind: "parking"; id?: string; name_si: string; name_en: string; lat: number; lng: number; capacity: number; status: string; vehicleTypes: VehicleType[]; nearestSegmentId: string };
 
-const MODES: { id: EditorMode; icon: React.ComponentType<{ className?: string }>; label: string; hint: string }[] = [
-  { id: "view", icon: MousePointer2, label: "Select / Move", hint: "Click a node, segment or POI to edit it. Drag nodes to reposition." },
-  { id: "node", icon: CircleDot, label: "Add intersection", hint: "Tap anywhere on the map to place a new intersection node." },
-  { id: "segment", icon: Route, label: "Draw one-way street", hint: "Click the FROM node → tap to add shape points → click the TO node." },
-  { id: "dansal", icon: UtensilsCrossed, label: "Add charity stall", hint: "Tap anywhere on the map to place a new dānsala." },
-  { id: "parking", icon: ParkingSquare, label: "Add parking", hint: "Tap anywhere on the map to place a parking area." },
+const MODES: { id: EditorMode; icon: React.ComponentType<{ className?: string }>; label: string; short: string; hint: string }[] = [
+  { id: "view", icon: MousePointer2, label: "Select / Move", short: "Select", hint: "Click a node, road or place to edit it. Drag nodes to reposition them." },
+  { id: "node", icon: CircleDot, label: "Add intersection", short: "Junction", hint: "Tap anywhere on the map to drop a new junction (intersection) node." },
+  { id: "segment", icon: Route, label: "Draw one-way street", short: "One-way", hint: "Click the FROM junction, tap along the road to add shape points, then click the TO junction." },
+  { id: "dansal", icon: UtensilsCrossed, label: "Add Dansal", short: "Dansal", hint: "Tap anywhere on the map to place a new Dansal / service point." },
+  { id: "parking", icon: ParkingSquare, label: "Add parking", short: "Parking", hint: "Tap anywhere on the map to place a parking area." },
 ];
 
 export default function Editor({ net }: { net: NetworkState }) {
@@ -162,113 +162,13 @@ export default function Editor({ net }: { net: NetworkState }) {
   const currentMode = MODES.find((m) => m.id === mode)!;
   const segLen = draft?.kind === "segment" ? Math.round(polylineLengthMeters(draftPolyline)) : 0;
 
+  const pickOverlay = () => overlayInputRef.current?.click();
+
   return (
-    <div className="flex flex-1 min-h-0 w-full overflow-hidden">
+    <div className="relative flex flex-1 min-h-0 w-full overflow-hidden bg-cream-100">
 
-      {/* ── Left sidebar ─────────────────────────────────────────────────── */}
-      <div className={`relative flex flex-col bg-white border-r border-cream-200 shrink-0 transition-[width] duration-200 overflow-hidden ${panelOpen ? "w-72" : "w-0"}`}>
-
-        {/* Mode list */}
-        <div className="p-3 space-y-1 border-b border-cream-200">
-          <p className="px-2 py-1 text-[10px] font-black uppercase tracking-widest text-muted-foreground">Drawing mode</p>
-          {MODES.map(({ id, icon: Icon, label }) => (
-            <button
-              key={id}
-              onClick={() => changeMode(id)}
-              className={`flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left text-sm font-semibold transition-all ${
-                mode === id ? "bg-navy-700 text-white shadow-sm" : "text-navy-800 hover:bg-cream-50"
-              }`}
-            >
-              <Icon className="h-4 w-4 shrink-0" />
-              {label}
-            </button>
-          ))}
-        </div>
-
-        {/* Overlay upload */}
-        <div className="px-3 py-2 border-b border-cream-200">
-          <input ref={overlayInputRef} type="file" accept="image/*" hidden onChange={(e) => {
-            const file = e.target.files?.[0];
-            if (!file) return;
-            const url = URL.createObjectURL(file);
-            const c = center;
-            setOverlay({ url, bounds: [[c.lat - 0.02, c.lng - 0.02], [c.lat + 0.02, c.lng + 0.02]], opacity: 0.5 });
-            e.target.value = "";
-          }} />
-          <button
-            onClick={() => overlayInputRef.current?.click()}
-            className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-semibold text-navy-800 hover:bg-cream-50 transition-all"
-          >
-            <ImagePlus className="h-4 w-4 shrink-0" />
-            Upload reference map
-          </button>
-          {overlay && (
-            <div className="mt-1 px-3 pb-1 space-y-1">
-              <div className="flex items-center justify-between">
-                <span className="text-[11px] text-muted-foreground">Opacity</span>
-                <button onClick={() => setOverlay(null)} className="text-red-400 hover:text-red-600 transition-colors">
-                  <X className="h-3.5 w-3.5" />
-                </button>
-              </div>
-              <input type="range" min="0" max="1" step="0.05" value={overlay.opacity}
-                onChange={(e) => setOverlay({ ...overlay, opacity: Number(e.target.value) })}
-                className="w-full accent-navy-700" />
-            </div>
-          )}
-        </div>
-
-        {/* Hint box */}
-        <div className="px-4 py-3 bg-cream-50 border-b border-cream-200">
-          <p className="text-xs text-muted-foreground leading-relaxed">{currentMode.hint}</p>
-        </div>
-
-        {/* Segment step indicator */}
-        {mode === "segment" && draft?.kind === "segment" && !draft.toNodeId && (
-          <div className="px-4 py-3 bg-saffron-50 border-b border-saffron-200">
-            <p className="text-xs font-bold text-saffron-800">
-              {!draft.fromNodeId
-                ? "① Click the starting node on the map"
-                : "② Tap to add shape points — then click the ending node"}
-            </p>
-            {draft.fromNodeId && nodeById[draft.fromNodeId] && (
-              <p className="mt-1 text-xs text-saffron-700">
-                From: <strong>{localizedName(nodeById[draft.fromNodeId], lang)}</strong>
-              </p>
-            )}
-          </div>
-        )}
-
-        {/* Draft form — always available for segments so From/To can be chosen
-            from the dropdowns as well as by clicking node pins on the map. */}
-        {draft && (
-          <DraftForm
-            draft={draft}
-            setDraft={setDraft}
-            nodes={net.nodes}
-            segments={net.segments}
-            lang={lang}
-            segLen={segLen}
-            onSave={save}
-            onDelete={del}
-            onSnap={snapToRoad}
-            snapping={snapping}
-            snapError={snapError}
-            onCancel={() => { setSnapError(null); setDraft(mode === "segment" ? { kind: "segment", fromNodeId: "", toNodeId: "", name_si: "", name_en: "", points: [] } : null); }}
-          />
-        )}
-      </div>
-
-      {/* Panel toggle tab — sits on the map edge */}
-      <button
-        onClick={() => setPanelOpen((v) => !v)}
-        className="absolute left-0 top-1/2 z-10 -translate-y-1/2 flex items-center justify-center rounded-r-xl bg-white border border-l-0 border-cream-200 shadow-md h-12 w-6 hover:bg-cream-50 transition-colors"
-        style={{ left: panelOpen ? 288 : 0 }}
-      >
-        {panelOpen ? <ChevronLeft className="h-3.5 w-3.5 text-navy-700" /> : <ChevronRight className="h-3.5 w-3.5 text-navy-700" />}
-      </button>
-
-      {/* ── Map ────────────────────────────────────────────────────────────── */}
-      <div className="relative flex-1">
+      {/* ── Map: full bleed ──────────────────────────────────────────────── */}
+      <div className="absolute inset-0">
         <AdminMapView
           center={center}
           zoom={net.config?.defaultZoom || 14}
@@ -289,6 +189,154 @@ export default function Editor({ net }: { net: NetworkState }) {
           onParkingClick={handleParkingClick}
         />
       </div>
+
+      {/* Hidden overlay file input */}
+      <input ref={overlayInputRef} type="file" accept="image/*" hidden onChange={(e) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+        const url = URL.createObjectURL(file);
+        const c = center;
+        setOverlay({ url, bounds: [[c.lat - 0.02, c.lng - 0.02], [c.lat + 0.02, c.lng + 0.02]], opacity: 0.5 });
+        e.target.value = "";
+      }} />
+
+      {/* ── Floating tool toolbar (top center) ───────────────────────────── */}
+      <div className="pointer-events-none absolute inset-x-0 top-3 z-10 flex justify-center px-3">
+        <div className="pointer-events-auto flex items-center gap-1 rounded-2xl border border-cream-200 bg-white/95 p-1.5 shadow-poson-lg backdrop-blur">
+          {MODES.map(({ id, icon: Icon, label, short }) => (
+            <button
+              key={id}
+              onClick={() => { changeMode(id); setPanelOpen(true); }}
+              title={label}
+              className={`flex min-w-[60px] flex-col items-center gap-1 rounded-xl px-3 py-2 text-[11px] font-semibold transition-all ${
+                mode === id ? "bg-navy-700 text-white shadow-sm" : "text-navy-700 hover:bg-cream-100"
+              }`}
+            >
+              <Icon className="h-[18px] w-[18px]" />
+              {short}
+            </button>
+          ))}
+          <div className="mx-1 h-9 w-px bg-cream-200" />
+          <button
+            onClick={pickOverlay}
+            title="Upload a reference map image to trace over"
+            className={`flex min-w-[60px] flex-col items-center gap-1 rounded-xl px-3 py-2 text-[11px] font-semibold transition-all ${
+              overlay ? "bg-saffron-100 text-saffron-700" : "text-navy-700 hover:bg-cream-100"
+            }`}
+          >
+            <ImagePlus className="h-[18px] w-[18px]" />
+            Overlay
+          </button>
+        </div>
+      </div>
+
+      {/* ── Contextual panel (top left) ──────────────────────────────────── */}
+      {panelOpen ? (
+        <div className="absolute left-3 top-3 z-10 flex max-h-[calc(100%-1.5rem)] w-[330px] max-w-[calc(100%-1.5rem)] flex-col overflow-hidden rounded-2xl border border-cream-200 bg-white shadow-poson-lg">
+          {/* Header */}
+          <div className="flex shrink-0 items-center gap-2.5 border-b border-cream-200 px-4 py-3">
+            <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-navy-700 text-white">
+              <currentMode.icon className="h-4 w-4" />
+            </span>
+            <div className="min-w-0 flex-1">
+              <p className="truncate text-sm font-bold text-navy-900">{currentMode.label}</p>
+            </div>
+            <button onClick={() => setPanelOpen(false)} title="Hide panel" className="rounded-lg p-1.5 text-muted-foreground hover:bg-cream-100">
+              <PanelLeftClose className="h-4 w-4" />
+            </button>
+          </div>
+
+          <div className="min-h-0 flex-1 overflow-y-auto">
+            {/* Hint */}
+            <div className="border-b border-cream-200 bg-cream-50 px-4 py-3">
+              <p className="text-xs leading-relaxed text-muted-foreground">{currentMode.hint}</p>
+            </div>
+
+            {/* Segment step guide */}
+            {mode === "segment" && draft?.kind === "segment" && !draft.id && (
+              <SegmentSteps draft={draft} fromName={draft.fromNodeId ? localizedName(nodeById[draft.fromNodeId], lang) : ""} />
+            )}
+
+            {/* Overlay opacity */}
+            {overlay && (
+              <div className="flex items-center gap-3 border-b border-cream-200 px-4 py-3">
+                <ImagePlus className="h-4 w-4 shrink-0 text-saffron-600" />
+                <input
+                  type="range" min="0" max="1" step="0.05" value={overlay.opacity}
+                  onChange={(e) => setOverlay({ ...overlay, opacity: Number(e.target.value) })}
+                  className="flex-1 accent-navy-700"
+                />
+                <button onClick={() => setOverlay(null)} title="Remove overlay" className="text-red-400 hover:text-red-600">
+                  <X className="h-3.5 w-3.5" />
+                </button>
+              </div>
+            )}
+
+            {/* Draft form */}
+            {draft ? (
+              <DraftForm
+                draft={draft}
+                setDraft={setDraft}
+                nodes={net.nodes}
+                segments={net.segments}
+                lang={lang}
+                segLen={segLen}
+                onSave={save}
+                onDelete={del}
+                onSnap={snapToRoad}
+                snapping={snapping}
+                snapError={snapError}
+                onCancel={() => { setSnapError(null); setDraft(mode === "segment" ? { kind: "segment", fromNodeId: "", toNodeId: "", name_si: "", name_en: "", points: [] } : null); }}
+              />
+            ) : mode === "view" ? (
+              <div className="flex flex-col items-center gap-2 px-4 py-8 text-center">
+                <MapPin className="h-6 w-6 text-cream-300" />
+                <p className="text-xs text-muted-foreground">Nothing selected. Click a node, road or place on the map to edit it.</p>
+              </div>
+            ) : null}
+          </div>
+        </div>
+      ) : (
+        <button
+          onClick={() => setPanelOpen(true)}
+          title="Show panel"
+          className="absolute left-3 top-3 z-10 flex h-10 w-10 items-center justify-center rounded-xl border border-cream-200 bg-white text-navy-700 shadow-poson-lg hover:bg-cream-50"
+        >
+          <PanelLeftOpen className="h-4 w-4" />
+        </button>
+      )}
+    </div>
+  );
+}
+
+// ─── Segment step guide ───────────────────────────────────────────────────────
+
+function SegmentSteps({ draft, fromName }: { draft: Extract<Draft, { kind: "segment" }>; fromName: string }) {
+  const steps = [
+    { n: 1, label: "Pick FROM junction", done: !!draft.fromNodeId },
+    { n: 2, label: `Trace the road (${draft.points.length} points)`, done: draft.points.length > 0 },
+    { n: 3, label: "Pick TO junction", done: !!draft.toNodeId },
+  ];
+  // The active step is the first one not yet done.
+  const activeN = steps.find((s) => !s.done)?.n ?? 0;
+  return (
+    <div className="border-b border-cream-200 bg-saffron-50 px-4 py-3 space-y-2">
+      {steps.map((s) => {
+        const active = s.n === activeN;
+        return (
+          <div key={s.n} className="flex items-center gap-2.5">
+            <span className={`flex h-5 w-5 shrink-0 items-center justify-center rounded-full text-[10px] font-black ${
+              s.done ? "bg-green-500 text-white" : active ? "bg-saffron-500 text-white" : "bg-white text-saffron-700 border border-saffron-300"
+            }`}>
+              {s.done ? <Check className="h-3 w-3" /> : s.n}
+            </span>
+            <span className={`text-xs font-semibold ${s.done ? "text-green-700" : "text-saffron-800"}`}>{s.label}</span>
+          </div>
+        );
+      })}
+      {draft.fromNodeId && fromName && (
+        <p className="pt-1 text-[11px] text-saffron-700">From: <strong>{fromName}</strong></p>
+      )}
     </div>
   );
 }
@@ -313,7 +361,7 @@ function DraftForm({ draft, setDraft, nodes, segments, lang, segLen, onSave, onD
   const hasId = !!(draft as { id?: string }).id;
 
   return (
-    <div className="flex-1 overflow-y-auto p-4 space-y-3">
+    <div className="p-4 space-y-3">
       <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">
         {`${hasId ? "Edit" : "New"} ${draft.kind}`}
       </p>

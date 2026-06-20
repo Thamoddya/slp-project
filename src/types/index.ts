@@ -84,6 +84,8 @@ export interface RouteSuccess {
   segments: NetworkSegment[];
   polyline: LatLng[];
   snappedPoint: LatLng | null;
+  /** True when the start was outside the zone and we routed from an entry point. */
+  viaEntry?: boolean;
 }
 
 export interface RouteFailure {

@@ -60,6 +60,7 @@
     "farFromNetwork": "You are outside the route zone.",
     "farHint": "Head to the nearest entry point shown on the map, then tap GO again.",
     "rerouted": "Your route changed — a road ahead was closed.",
+    "viaEntry": "You're outside the one-way zone. Head to {{name}} first, then follow this route.",
     "newRoute": "Plan a new route",
     "via": "via"
   },
