@@ -1,0 +1,142 @@
+{
+  "schemaVersion": "1.0.0",
+  "id": "seo-geo-claude-skills",
+  "name": "seo-geo-claude-skills",
+  "version": "4.0.0",
+  "displayName": "SEO & GEO Skills Library",
+  "description": "20 skills and 9 commands for Search Engine Optimization (SEO) and Generative Engine Optimization (GEO). Content quality powered by CORE-EEAT (80 items). Domain authority powered by CITE (40 items). Tool-agnostic — works with or without integrations.",
+  "author": {
+    "name": "Aaron He Zhu",
+    "email": "hello@zhuhe.io",
+    "url": "https://github.com/aaron-he-zhu"
+  },
+  "homepage": "https://github.com/aaron-he-zhu/seo-geo-claude-skills",
+  "repository": "https://github.com/aaron-he-zhu/seo-geo-claude-skills",
+  "license": "Apache-2.0",
+  "keywords": [
+    "seo",
+    "geo",
+    "content-optimization",
+    "search-engine-optimization",
+    "generative-engine-optimization",
+    "ai-citation",
+    "core-eeat",
+    "cite",
+    "keyword-research",
+    "technical-seo",
+    "content-writing",
+    "schema-markup",
+    "rank-tracking",
+    "backlink-analysis"
+  ],
+  "capabilities": {
+    "skills": {
+      "enabled": true
+    },
+    "commands": {
+      "enabled": true
+    },
+    "tools": {
+      "enabled": true,
+      "sources": [
+        "mcp"
+      ]
+    }
+  },
+  "metadata": {
+    "category": "marketing",
+    "tags": [
+      "seo",
+      "geo",
+      "content-optimization",
+      "ai-citation",
+      "core-eeat",
+      "cite"
+    ],
+    "compatible_with": [
+      "claude-code",
+      "cowork"
+    ]
+  },
+  "commands": [
+    {
+      "name": "audit-page",
+      "description": "Run a comprehensive on-page SEO + CORE-EEAT content quality audit for a given URL or content",
+      "path": "commands/audit-page.md"
+    },
+    {
+      "name": "audit-domain",
+      "description": "Run a full CITE domain authority audit with 40-item scoring, veto checks, and prioritized action plan",
+      "path": "commands/audit-domain.md"
+    },
+    {
+      "name": "check-technical",
+      "description": "Run a quick technical SEO health check for a given URL or domain",
+      "path": "commands/check-technical.md"
+    },
+    {
+      "name": "generate-schema",
+      "description": "Generate Schema.org JSON-LD structured data markup for a page",
+      "path": "commands/generate-schema.md"
+    },
+    {
+      "name": "keyword-research",
+      "description": "Research and analyze keywords for a topic or niche",
+      "path": "commands/keyword-research.md"
+    },
+    {
+      "name": "optimize-meta",
+      "description": "Optimize title tags, meta descriptions, and Open Graph tags for a page",
+      "path": "commands/optimize-meta.md"
+    },
+    {
+      "name": "report",
+      "description": "Generate a comprehensive SEO and GEO performance report",
+      "path": "commands/report.md"
+    },
+    {
+      "name": "setup-alert",
+      "description": "Configure monitoring alerts for critical SEO and GEO metrics",
+      "path": "commands/setup-alert.md"
+    },
+    {
+      "name": "write-content",
+      "description": "Write SEO and GEO optimized content from a topic and target keyword",
+      "path": "commands/write-content.md"
+    }
+  ],
+  "skills": [
+    "./research/competitor-analysis",
+    "./research/content-gap-analysis",
+    "./research/keyword-research",
+    "./research/serp-analysis",
+    "./build/geo-content-optimizer",
+    "./build/meta-tags-optimizer",
+    "./build/schema-markup-generator",
+    "./build/seo-content-writer",
+    "./optimize/content-refresher",
+    "./optimize/internal-linking-optimizer",
+    "./optimize/on-page-seo-auditor",
+    "./optimize/technical-seo-checker",
+    "./monitor/alert-manager",
+    "./monitor/backlink-analyzer",
+    "./monitor/performance-reporter",
+    "./monitor/rank-tracker",
+    "./cross-cutting/content-quality-auditor",
+    "./cross-cutting/domain-authority-auditor",
+    "./cross-cutting/entity-optimizer",
+    "./cross-cutting/memory-management"
+  ],
+  "hooks": [
+    {
+      "event": "SessionStart",
+      "path": "hooks/hooks.json"
+    }
+  ],
+  "mcpServers": [
+    {
+      "id": "mcp-servers",
+      "path": ".mcp.json"
+    }
+  ]
+}
