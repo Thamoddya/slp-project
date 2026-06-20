@@ -81,6 +81,8 @@ interface MapInnerProps {
   onMapTap?: (pt: LatLng) => void;
   onPickNode?: (node: NetworkNode) => void;
   fitBounds?: [number, number][] | null;
+  /** Pan/zoom the map to a point; bump `nonce` to re-trigger. */
+  focus?: { lat: number; lng: number; zoom?: number; nonce: number } | null;
 }
 
 function MapInner({
@@ -98,6 +100,7 @@ function MapInner({
   onMapTap,
   onPickNode,
   fitBounds,
+  focus,
 }: MapInnerProps) {
   const map = useMap();
 
@@ -107,6 +110,13 @@ function MapInner({
     fitBounds.forEach(([lat, lng]) => bounds.extend({ lat, lng }));
     map.fitBounds(bounds, { top: 60, right: 20, bottom: 20, left: 20 });
   }, [map, fitBounds]);
+
+  useEffect(() => {
+    if (!map || !focus) return;
+    map.panTo({ lat: focus.lat, lng: focus.lng });
+    if (focus.zoom) map.setZoom(focus.zoom);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [map, focus?.nonce]);
 
   const routeOk = route?.ok ? route : null;
   const routePolyline = routeOk?.polyline ?? [];

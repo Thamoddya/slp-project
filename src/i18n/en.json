@@ -6,7 +6,37 @@
     "loading": "Loading map and road network…"
   },
   "lang": { "toggle": "සිංහල", "current": "English" },
-  "nav": { "public": "Routes", "admin": "Admin" },
+  "nav": { "public": "Routes", "admin": "Admin", "map": "Map", "places": "Places", "parking": "Parking", "more": "More" },
+  "map": {
+    "yourLocation": "Your location",
+    "locating": "Finding your location…",
+    "noLocation": "Location off — tap to enable",
+    "destination": "Destination"
+  },
+  "places": {
+    "title": "Dansal & Services",
+    "subtitle": "All food, drink, water & medical points",
+    "none": "No places listed yet.",
+    "count": "{{n}} places",
+    "showOnMap": "Show on map"
+  },
+  "parkingTab": {
+    "title": "Parking",
+    "subtitle": "All vehicle parking areas",
+    "none": "No parking listed yet.",
+    "count": "{{n}} parking areas"
+  },
+  "more": {
+    "title": "More",
+    "language": "Language",
+    "admin": "Admin panel",
+    "report": "Report a problem",
+    "about": "About this app",
+    "credits": "Design & Development",
+    "developedBy": "Designed & developed by Thamoddya Rashmitha",
+    "poweredBy": "Powered by Texta World",
+    "close": "Close"
+  },
   "home": {
     "useLocation": "Use my live location",
     "locating": "Getting your location…",

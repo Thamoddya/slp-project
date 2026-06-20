@@ -8,7 +8,7 @@ const saved = typeof localStorage !== "undefined" ? localStorage.getItem(STORAGE
 
 i18n.use(initReactI18next).init({
   resources: { en: { translation: en }, si: { translation: si } },
-  lng: saved || "si",
+  lng: saved || "en",
   fallbackLng: "en",
   interpolation: { escapeValue: false },
 });

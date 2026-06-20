@@ -20,8 +20,8 @@ export default function TopBar({ right, className }: TopBarProps) {
       style={{ paddingTop: "max(12px, env(safe-area-inset-top))" }}
     >
       {/* SLP Crest */}
-      <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-saffron-500 shadow-sm">
-        <span className="text-xs font-black text-navy-900 tracking-tight">SLP</span>
+      <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-white shadow-sm">
+        <img src="/logo.png" alt="Sri Lanka Police" className="h-7 w-7 object-contain" draggable={false} />
       </div>
 
       {/* Title */}

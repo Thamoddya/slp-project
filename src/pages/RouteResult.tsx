@@ -69,7 +69,7 @@ export default function RouteResult({
     const isFar = route?.reason === "far-from-network";
     const entry = route?.entryNodeId ? net.nodes.find((n) => n.id === route.entryNodeId) : null;
     return (
-      <BottomSheet>
+      <Body>
         <div className="rounded-2xl bg-red-50 border border-red-200 p-4 mb-4">
           <p className="font-bold text-red-800 text-sm mb-1">
             {t(isFar ? "route.farFromNetwork" : "route.noRoute")}
@@ -86,7 +86,7 @@ export default function RouteResult({
         <Button variant="ghost" className="w-full" onClick={onNew}>
           {t("route.newRoute")}
         </Button>
-      </BottomSheet>
+      </Body>
     );
   }
 
@@ -94,7 +94,7 @@ export default function RouteResult({
   const start = net.nodes.find((n) => n.id === route.startNodeId);
 
   return (
-    <BottomSheet>
+    <Body>
       {/* Reroute warning */}
       {rerouted && (
         <div className="mb-3 flex items-center gap-2 rounded-xl bg-saffron-50 border border-saffron-200 px-3 py-2.5">
@@ -259,26 +259,14 @@ export default function RouteResult({
       <p className="mt-4 text-[11px] leading-relaxed text-muted-foreground border-t border-cream-200 pt-3">
         {t("disclaimer")}
       </p>
-    </BottomSheet>
+    </Body>
   );
 }
 
 // ─── Shared sub-components ────────────────────────────────────────────────────
 
-function BottomSheet({ children }: { children: React.ReactNode }) {
-  return (
-    <div
-      className="absolute inset-x-0 bottom-0 z-10 rounded-t-3xl bg-white shadow-sheet overflow-y-auto sheet-scroll px-4"
-      style={{
-        maxHeight: "62%",
-        paddingTop: "1rem",
-        paddingBottom: "calc(1rem + env(safe-area-inset-bottom, 0px))",
-      }}
-    >
-      <div className="mx-auto mb-4 h-1 w-10 rounded-full bg-cream-300" />
-      {children}
-    </div>
-  );
+function Body({ children }: { children: React.ReactNode }) {
+  return <div className="pb-2">{children}</div>;
 }
 
 function SectionTitle({ children }: { children: React.ReactNode }) {

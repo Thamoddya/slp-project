@@ -90,8 +90,17 @@
   }
 }
 
+/* ─── Preloader indeterminate bar ────────────────────────────────────────── */
+@keyframes preloader-slide {
+  0%   { transform: translateX(-110%); }
+  100% { transform: translateX(220%); }
+}
+.preloader-bar {
+  animation: preloader-slide 1.1s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+}
+
 /* ─── Google Maps overrides ──────────────────────────────────────────────── */
 .gm-style .gm-style-cc,
 .gm-style-cc {
-  bottom: 64px !important;
+  bottom: 4px !important;
 }
