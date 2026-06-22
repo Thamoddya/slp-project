@@ -149,7 +149,26 @@
       "title": "Backup & Restore",
       "export": "Export JSON",
       "import": "Import JSON",
-      "importWarn": "This replaces the whole network. Continue?"
+      "importWarn": "This replaces the road network (junctions & roads) with the imported file. Dansal & parking are kept unless the file includes them. Continue?"
+    },
+    "backup": {
+      "networkStats": "Network summary",
+      "exportTitle": "Export network",
+      "exportHint": "Download all junctions, roads, Dansal and parking as a JSON backup.",
+      "export": "Export JSON backup",
+      "importTitle": "Import network",
+      "importHint": "Restore from a JSON file. Roads & junctions are replaced; Dansal & parking are kept unless the file includes them.",
+      "import": "Import JSON",
+      "importedN": "Imported {{n}} records successfully.",
+      "importError": "Couldn't read that file. Make sure it's a valid network JSON export."
+    },
+    "stats": {
+      "nodes": "Junctions",
+      "segments": "Roads",
+      "openSegments": "Open roads",
+      "dansal": "Dansal",
+      "activeDansal": "Active Dansal",
+      "parking": "Parking areas"
     }
   },
   "units": { "km": "km", "m": "m", "min": "min" }

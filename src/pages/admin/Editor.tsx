@@ -140,10 +140,14 @@ export default function Editor({ net }: { net: NetworkState }) {
     try {
       const { DirectionsService } = (await window.google.maps.importLibrary("routes")) as google.maps.RoutesLibrary;
       const svc = new DirectionsService();
+      // The Directions API allows at most 25 waypoints (plus origin & destination).
+      // The shape points are only hints for which road to follow, so evenly
+      // downsample them to fit — the returned overview_path is still full detail.
+      const hints = downsample(draft.points, 23);
       const res = await svc.route({
         origin: { lat: from.lat, lng: from.lng },
         destination: { lat: to.lat, lng: to.lng },
-        waypoints: draft.points.map((p) => ({ location: { lat: p.lat, lng: p.lng }, stopover: false })),
+        waypoints: hints.map((p) => ({ location: { lat: p.lat, lng: p.lng }, stopover: false })),
         travelMode: window.google.maps.TravelMode.DRIVING,
       });
       const path = res.routes[0]?.overview_path ?? [];
@@ -153,7 +157,7 @@ export default function Editor({ net }: { net: NetworkState }) {
       const interior = path.slice(1, -1).map((ll) => ({ lat: ll.lat(), lng: ll.lng() }));
       setDraft({ ...draft, points: interior });
     } catch {
-      setSnapError("Couldn't snap to road. Enable the Directions API for this key, or trace the road by tapping shape points.");
+      setSnapError("Couldn't snap to road. Check the Directions API is enabled for this key, or trace the road by tapping fewer shape points.");
     } finally {
       setSnapping(false);
     }
@@ -489,6 +493,17 @@ function DraftForm({ draft, setDraft, nodes, segments, lang, segLen, onSave, onD
       </div>
     </div>
   );
+}
+
+// Evenly pick at most `max` items from an array, always keeping order and the
+// first/last. Used to keep Directions waypoints under the API's 25-point limit.
+function downsample<T>(arr: T[], max: number): T[] {
+  if (arr.length <= max) return arr;
+  if (max <= 1) return arr.length ? [arr[0]] : [];
+  const step = (arr.length - 1) / (max - 1);
+  const out: T[] = [];
+  for (let i = 0; i < max; i++) out.push(arr[Math.round(i * step)]);
+  return out;
 }
 
 function FF({ label, children }: { label: string; children: React.ReactNode }) {

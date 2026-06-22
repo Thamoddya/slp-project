@@ -1,0 +1,422 @@
+{
+  "exportedAt": "2026-06-22T15:03:33.389Z",
+  "nodes": [
+    {
+      "id": "entry_pothanegama",
+      "name_si": "පොතානේගම හංදිය",
+      "name_en": "Pothanegama Junction",
+      "lat": 8.321,
+      "lng": 80.406,
+      "isEntryPoint": true,
+      "isExitPoint": false
+    },
+    {
+      "id": "n1_sandahiru",
+      "name_si": "සදහිරු සෑය",
+      "name_en": "Sandahiru Seya",
+      "lat": 8.336,
+      "lng": 80.4035,
+      "isEntryPoint": false,
+      "isExitPoint": false
+    },
+    {
+      "id": "n2_sunatha",
+      "name_si": "සුනාත වටරවුම",
+      "name_en": "Sunatha Roundabout",
+      "lat": 8.342,
+      "lng": 80.399,
+      "isEntryPoint": false,
+      "isExitPoint": false
+    },
+    {
+      "id": "n3_mirisaveti",
+      "name_si": "මිරිසවැටිය",
+      "name_en": "Mirisaveti",
+      "lat": 8.3447,
+      "lng": 80.393,
+      "isEntryPoint": false,
+      "isExitPoint": false
+    },
+    {
+      "id": "n4_arippu",
+      "name_si": "අරිප්පු පාර",
+      "name_en": "Arippu Road",
+      "lat": 8.346,
+      "lng": 80.3905,
+      "isEntryPoint": false,
+      "isExitPoint": false
+    },
+    {
+      "id": "n5_basawakkulama",
+      "name_si": "බසවක්කුලම (අභය වැව)",
+      "name_en": "Basawakkulama (Abhaya Wewa)",
+      "lat": 8.349,
+      "lng": 80.3895,
+      "isEntryPoint": false,
+      "isExitPoint": false
+    },
+    {
+      "id": "n6_ruwanweli",
+      "name_si": "රුවන්වැලිසෑය",
+      "name_en": "Ruwanwelisaya",
+      "lat": 8.3494,
+      "lng": 80.3964,
+      "isEntryPoint": false,
+      "isExitPoint": false
+    },
+    {
+      "id": "n7_oldhospital",
+      "name_si": "පැරණි රෝහල් හංදිය",
+      "name_en": "Old Hospital Junction",
+      "lat": 8.352,
+      "lng": 80.398,
+      "isEntryPoint": false,
+      "isExitPoint": false
+    },
+    {
+      "id": "n8_thuparama",
+      "name_si": "ථූපාරාමය",
+      "name_en": "Thuparamaya",
+      "lat": 8.3536,
+      "lng": 80.396,
+      "isEntryPoint": false,
+      "isExitPoint": false
+    },
+    {
+      "id": "n9_lankarama",
+      "name_si": "ලංකාරාමය",
+      "name_en": "Lankarama",
+      "lat": 8.3585,
+      "lng": 80.3905,
+      "isEntryPoint": false,
+      "isExitPoint": false
+    },
+    {
+      "id": "n10_sandakada",
+      "name_si": "සඳකඩපහන",
+      "name_en": "Sandakada Pahana",
+      "lat": 8.3625,
+      "lng": 80.3945,
+      "isEntryPoint": false,
+      "isExitPoint": false
+    },
+    {
+      "id": "n11_abhayagiri",
+      "name_si": "අභයගිරිය",
+      "name_en": "Abhayagiri",
+      "lat": 8.3636,
+      "lng": 80.3958,
+      "isEntryPoint": false,
+      "isExitPoint": false
+    },
+    {
+      "id": "n12_samadhi",
+      "name_si": "සමාධි පිළිමය",
+      "name_en": "Samadhi Statue",
+      "lat": 8.3618,
+      "lng": 80.398,
+      "isEntryPoint": false,
+      "isExitPoint": false
+    },
+    {
+      "id": "n13_kohomba",
+      "name_si": "කොහොඹ ගස් හංදිය",
+      "name_en": "Kohomba Gas Junction",
+      "lat": 8.3545,
+      "lng": 80.4015,
+      "isEntryPoint": false,
+      "isExitPoint": false
+    },
+    {
+      "id": "exit_yapanaya",
+      "name_si": "යාපනය හංදිය",
+      "name_en": "Yapanaya Junction",
+      "lat": 8.351,
+      "lng": 80.4065,
+      "isEntryPoint": false,
+      "isExitPoint": true
+    }
+  ],
+  "segments": [
+    {
+      "id": "r1",
+      "fromNodeId": "entry_pothanegama",
+      "toNodeId": "n1_sandahiru",
+      "name_si": "පොතානේගම හංදිය → සදහිරු සෑය",
+      "name_en": "Pothanegama Junction → Sandahiru Seya",
+      "polyline": [
+        {
+          "lat": 8.321,
+          "lng": 80.406
+        },
+        {
+          "lat": 8.336,
+          "lng": 80.4035
+        }
+      ],
+      "lengthMeters": 1690,
+      "status": "open",
+      "notes": "Poson 2026 one-way plan"
+    },
+    {
+      "id": "r2",
+      "fromNodeId": "n1_sandahiru",
+      "toNodeId": "n2_sunatha",
+      "name_si": "සදහිරු සෑය → සුනාත වටරවුම",
+      "name_en": "Sandahiru Seya → Sunatha Roundabout",
+      "polyline": [
+        {
+          "lat": 8.336,
+          "lng": 80.4035
+        },
+        {
+          "lat": 8.342,
+          "lng": 80.399
+        }
+      ],
+      "lengthMeters": 831,
+      "status": "open",
+      "notes": "Poson 2026 one-way plan"
+    },
+    {
+      "id": "r3",
+      "fromNodeId": "n2_sunatha",
+      "toNodeId": "n3_mirisaveti",
+      "name_si": "සුනාත වටරවුම → මිරිසවැටිය",
+      "name_en": "Sunatha Roundabout → Mirisaveti",
+      "polyline": [
+        {
+          "lat": 8.342,
+          "lng": 80.399
+        },
+        {
+          "lat": 8.3447,
+          "lng": 80.393
+        }
+      ],
+      "lengthMeters": 725,
+      "status": "open",
+      "notes": "Poson 2026 one-way plan"
+    },
+    {
+      "id": "r4",
+      "fromNodeId": "n3_mirisaveti",
+      "toNodeId": "n4_arippu",
+      "name_si": "මිරිසවැටිය → අරිප්පු පාර",
+      "name_en": "Mirisaveti → Arippu Road",
+      "polyline": [
+        {
+          "lat": 8.3447,
+          "lng": 80.393
+        },
+        {
+          "lat": 8.346,
+          "lng": 80.3905
+        }
+      ],
+      "lengthMeters": 311,
+      "status": "open",
+      "notes": "Poson 2026 one-way plan"
+    },
+    {
+      "id": "r5",
+      "fromNodeId": "n4_arippu",
+      "toNodeId": "n5_basawakkulama",
+      "name_si": "අරිප්පු පාර → බසවක්කුලම (අභය වැව)",
+      "name_en": "Arippu Road → Basawakkulama (Abhaya Wewa)",
+      "polyline": [
+        {
+          "lat": 8.346,
+          "lng": 80.3905
+        },
+        {
+          "lat": 8.349,
+          "lng": 80.3895
+        }
+      ],
+      "lengthMeters": 351,
+      "status": "open",
+      "notes": "Poson 2026 one-way plan"
+    },
+    {
+      "id": "r6",
+      "fromNodeId": "n5_basawakkulama",
+      "toNodeId": "n6_ruwanweli",
+      "name_si": "බසවක්කුලම (අභය වැව) → රුවන්වැලිසෑය",
+      "name_en": "Basawakkulama (Abhaya Wewa) → Ruwanwelisaya",
+      "polyline": [
+        {
+          "lat": 8.349,
+          "lng": 80.3895
+        },
+        {
+          "lat": 8.3494,
+          "lng": 80.3964
+        }
+      ],
+      "lengthMeters": 760,
+      "status": "open",
+      "notes": "Poson 2026 one-way plan"
+    },
+    {
+      "id": "r7",
+      "fromNodeId": "n6_ruwanweli",
+      "toNodeId": "n7_oldhospital",
+      "name_si": "රුවන්වැලිසෑය → පැරණි රෝහල් හංදිය",
+      "name_en": "Ruwanwelisaya → Old Hospital Junction",
+      "polyline": [
+        {
+          "lat": 8.3494,
+          "lng": 80.3964
+        },
+        {
+          "lat": 8.352,
+          "lng": 80.398
+        }
+      ],
+      "lengthMeters": 338,
+      "status": "open",
+      "notes": "Poson 2026 one-way plan"
+    },
+    {
+      "id": "r8",
+      "fromNodeId": "n7_oldhospital",
+      "toNodeId": "n8_thuparama",
+      "name_si": "පැරණි රෝහල් හංදිය → ථූපාරාමය",
+      "name_en": "Old Hospital Junction → Thuparamaya",
+      "polyline": [
+        {
+          "lat": 8.352,
+          "lng": 80.398
+        },
+        {
+          "lat": 8.3536,
+          "lng": 80.396
+        }
+      ],
+      "lengthMeters": 283,
+      "status": "open",
+      "notes": "Poson 2026 one-way plan"
+    },
+    {
+      "id": "r9",
+      "fromNodeId": "n8_thuparama",
+      "toNodeId": "n9_lankarama",
+      "name_si": "ථූපාරාමය → ලංකාරාමය",
+      "name_en": "Thuparamaya → Lankarama",
+      "polyline": [
+        {
+          "lat": 8.3536,
+          "lng": 80.396
+        },
+        {
+          "lat": 8.3585,
+          "lng": 80.3905
+        }
+      ],
+      "lengthMeters": 814,
+      "status": "open",
+      "notes": "Poson 2026 one-way plan"
+    },
+    {
+      "id": "r10",
+      "fromNodeId": "n9_lankarama",
+      "toNodeId": "n10_sandakada",
+      "name_si": "ලංකාරාමය → සඳකඩපහන",
+      "name_en": "Lankarama → Sandakada Pahana",
+      "polyline": [
+        {
+          "lat": 8.3585,
+          "lng": 80.3905
+        },
+        {
+          "lat": 8.3625,
+          "lng": 80.3945
+        }
+      ],
+      "lengthMeters": 626,
+      "status": "open",
+      "notes": "Poson 2026 one-way plan"
+    },
+    {
+      "id": "r11",
+      "fromNodeId": "n10_sandakada",
+      "toNodeId": "n11_abhayagiri",
+      "name_si": "සඳකඩපහන → අභයගිරිය",
+      "name_en": "Sandakada Pahana → Abhayagiri",
+      "polyline": [
+        {
+          "lat": 8.3625,
+          "lng": 80.3945
+        },
+        {
+          "lat": 8.3636,
+          "lng": 80.3958
+        }
+      ],
+      "lengthMeters": 188,
+      "status": "open",
+      "notes": "Poson 2026 one-way plan"
+    },
+    {
+      "id": "r12",
+      "fromNodeId": "n11_abhayagiri",
+      "toNodeId": "n12_samadhi",
+      "name_si": "අභයගිරිය → සමාධි පිළිමය",
+      "name_en": "Abhayagiri → Samadhi Statue",
+      "polyline": [
+        {
+          "lat": 8.3636,
+          "lng": 80.3958
+        },
+        {
+          "lat": 8.3618,
+          "lng": 80.398
+        }
+      ],
+      "lengthMeters": 314,
+      "status": "open",
+      "notes": "Poson 2026 one-way plan"
+    },
+    {
+      "id": "r13",
+      "fromNodeId": "n12_samadhi",
+      "toNodeId": "n13_kohomba",
+      "name_si": "සමාධි පිළිමය → කොහොඹ ගස් හංදිය",
+      "name_en": "Samadhi Statue → Kohomba Gas Junction",
+      "polyline": [
+        {
+          "lat": 8.3618,
+          "lng": 80.398
+        },
+        {
+          "lat": 8.3545,
+          "lng": 80.4015
+        }
+      ],
+      "lengthMeters": 898,
+      "status": "open",
+      "notes": "Poson 2026 one-way plan"
+    },
+    {
+      "id": "r14",
+      "fromNodeId": "n13_kohomba",
+      "toNodeId": "exit_yapanaya",
+      "name_si": "කොහොඹ ගස් හංදිය → යාපනය හංදිය",
+      "name_en": "Kohomba Gas Junction → Yapanaya Junction",
+      "polyline": [
+        {
+          "lat": 8.3545,
+          "lng": 80.4015
+        },
+        {
+          "lat": 8.351,
+          "lng": 80.4065
+        }
+      ],
+      "lengthMeters": 674,
+      "status": "open",
+      "notes": "Poson 2026 one-way plan"
+    }
+  ]
+}

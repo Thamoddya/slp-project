@@ -3,7 +3,7 @@ import { useTranslation } from "react-i18next";
 import { Download, Upload, CheckCircle2, AlertTriangle } from "lucide-react";
 import repo from "@/data/repo";
 import { Button } from "@/components/ui/button";
-import type { NetworkState } from "@/types";
+import type { NetworkState, AppConfig } from "@/types";
 
 type Status = "idle" | "success" | "error";
 
@@ -40,29 +40,27 @@ export default function DataBackup({ net }: { net: NetworkState }) {
       const text = await file.text();
       const data = JSON.parse(text);
 
-      let imported = 0;
-
-      if (Array.isArray(data.nodes)) {
-        for (const n of data.nodes) {
-          if (n.id) { await repo.set("nodes", n.id, n); imported++; }
-        }
-      }
-      if (Array.isArray(data.segments)) {
-        for (const s of data.segments) {
-          if (s.id) { await repo.set("segments", s.id, s); imported++; }
-        }
-      }
-      if (Array.isArray(data.dansal)) {
-        for (const d of data.dansal) {
-          if (d.id) { await repo.set("dansal", d.id, d); imported++; }
-        }
-      }
-      if (Array.isArray(data.parking)) {
-        for (const p of data.parking) {
-          if (p.id) { await repo.set("parking", p.id, p); imported++; }
-        }
+      const hasNetwork = Array.isArray(data.nodes) || Array.isArray(data.segments);
+      if (!hasNetwork) {
+        setStatus("error");
+        setStatusMsg(t("admin.backup.importError"));
+        return;
       }
 
+      // Replace the road network so no leftover/duplicate roads survive (which
+      // could create wrong one-way routes). Collections the file omits are kept
+      // as-is — e.g. importing a routes-only file preserves existing Dansal/parking.
+      if (!window.confirm(t("admin.data.importWarn"))) return;
+
+      const nodes = Array.isArray(data.nodes) ? data.nodes : net.nodes;
+      const segments = Array.isArray(data.segments) ? data.segments : net.segments;
+      const dansal = Array.isArray(data.dansal) ? data.dansal : net.dansal;
+      const parking = Array.isArray(data.parking) ? data.parking : net.parking;
+      const config = (data.config || net.config) as AppConfig;
+
+      await repo.replaceAll({ nodes, segments, dansal, parking, config });
+
+      const imported = nodes.length + segments.length + dansal.length + parking.length;
       setStatus("success");
       setStatusMsg(t("admin.backup.importedN", { n: imported }));
     } catch {
