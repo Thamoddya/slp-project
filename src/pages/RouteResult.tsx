@@ -1,6 +1,6 @@
 import { useMemo } from "react";
 import { useTranslation } from "react-i18next";
-import { AlertTriangle, ArrowRight, Clock, Ruler, Plus } from "lucide-react";
+import { AlertTriangle, ArrowRight, Clock, Ruler, Navigation } from "lucide-react";
 import { formatDistance, formatEta, localizedName } from "@/components/format";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -24,11 +24,12 @@ interface RouteResultProps {
   setVehicle: (v: string) => void;
   onNew: () => void;
   onReport: () => void;
+  onOpenMaps?: () => void;
 }
 
 export default function RouteResult({
   route, net, lang, rerouted, showDansal, showParking, vehicle,
-  setShowDansal, setShowParking, setVehicle, onNew, onReport,
+  setShowDansal, setShowParking, setVehicle, onNew, onReport, onOpenMaps,
 }: RouteResultProps) {
   const { t } = useTranslation();
 
@@ -250,7 +251,13 @@ export default function RouteResult({
       )}
 
       {/* Actions */}
-      <div className="flex gap-3 mt-2">
+      {onOpenMaps && (
+        <Button variant="saffron" className="w-full mb-2" onClick={onOpenMaps}>
+          <Navigation className="mr-2 h-4 w-4" />
+          {t("route.openInMaps")}
+        </Button>
+      )}
+      <div className="flex gap-3 mt-1">
         <Button className="flex-1" onClick={onNew}>
           {t("route.newRoute")}
         </Button>

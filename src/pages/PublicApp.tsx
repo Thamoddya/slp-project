@@ -49,11 +49,12 @@ export default function PublicApp() {
   const [rerouted, setRerouted] = useState(false);
   const [focus, setFocus] = useState<Focus | null>(null);
   const lastPlanPos = useRef<GeoPosition | null>(null);
+  const didCenter = useRef(false);
 
   // Keep the preloader up until the network is ready AND a short minimum elapses.
   const [minElapsed, setMinElapsed] = useState(false);
   useEffect(() => {
-    const id = setTimeout(() => setMinElapsed(true), 1400);
+    const id = setTimeout(() => setMinElapsed(true), 4000);
     return () => clearTimeout(id);
   }, []);
 
@@ -64,6 +65,23 @@ export default function PublicApp() {
     window.addEventListener("offline", off);
     return () => { window.removeEventListener("online", on); window.removeEventListener("offline", off); };
   }, []);
+
+  // Ask for the user's live location automatically on first load, so the map
+  // centres on them without a tap. (The browser still shows its permission
+  // prompt; if denied, the manual "Use my location" button remains.)
+  useEffect(() => {
+    geo.start();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // Centre the map on the user once, the first time a fix arrives.
+  useEffect(() => {
+    const p = geo.position;
+    if (p && !didCenter.current) {
+      didCenter.current = true;
+      setFocus({ lat: p.lat, lng: p.lng, zoom: 15, nonce: Date.now() });
+    }
+  }, [geo.position]);
 
   const center = net.config?.mapCenter || { lat: 8.3494, lng: 80.3975 };
   const userPos = geo.position;
@@ -142,6 +160,22 @@ export default function PublicApp() {
 
   const newRoute = () => { setRoute(null); setRerouted(false); setDestNode(null); };
 
+  // Hand the found route off to the phone's map app (Apple Maps on iOS, else
+  // Google Maps), passing the route's waypoints so it follows our corridor as
+  // closely as the external app allows. Starts from the user's live location
+  // when available, otherwise from the route's entry point.
+  const openInMaps = () => {
+    if (!route?.ok || !route.polyline?.length) return;
+    const sampled = samplePoints(route.polyline, 9);
+    const pts = userPos ? [{ lat: userPos.lat, lng: userPos.lng }, ...sampled] : sampled;
+    const fmt = (p: LatLng) => `${p.lat.toFixed(6)},${p.lng.toFixed(6)}`;
+    const isApple = /iPhone|iPad|iPod/i.test(navigator.userAgent);
+    const url = isApple
+      ? `https://maps.apple.com/?saddr=${fmt(pts[0])}&daddr=${pts.slice(1).map(fmt).join("+to:")}&dirflg=d`
+      : `https://www.google.com/maps/dir/${pts.map(fmt).join("/")}/?travelmode=driving`;
+    window.open(url, "_blank", "noopener");
+  };
+
   const fitBounds: [number, number][] | null =
     tab === "map" && route?.ok && route.polyline?.length
       ? route.polyline.map((p) => [p.lat, p.lng])
@@ -167,7 +201,7 @@ export default function PublicApp() {
           route={route} net={net} lang={lang} rerouted={rerouted}
           showDansal={showDansal} showParking={showParking} vehicle={vehicle}
           setShowDansal={setShowDansal} setShowParking={setShowParking} setVehicle={setVehicle}
-          onNew={newRoute} onReport={() => setReportOpen(true)}
+          onNew={newRoute} onReport={() => setReportOpen(true)} onOpenMaps={openInMaps}
         />
       );
     } else {
@@ -509,4 +543,17 @@ function EmptyBox({ children }: { children: React.ReactNode }) {
       {children}
     </div>
   );
+}
+
+// Evenly pick at most `max` points from a polyline, keeping order + first/last.
+function samplePoints(pts: LatLng[], max: number): LatLng[] {
+  if (pts.length <= max) return pts.map((p) => ({ lat: p.lat, lng: p.lng }));
+  if (max <= 1) return [{ lat: pts[0].lat, lng: pts[0].lng }];
+  const step = (pts.length - 1) / (max - 1);
+  const out: LatLng[] = [];
+  for (let i = 0; i < max; i++) {
+    const p = pts[Math.round(i * step)];
+    out.push({ lat: p.lat, lng: p.lng });
+  }
+  return out;
 }

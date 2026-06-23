@@ -73,18 +73,25 @@ export default function MoreModal({ onClose, onReport }: MoreModalProps) {
 
         {/* Credits */}
         <div className="flex flex-col items-center gap-3 border-t border-cream-200 pt-5 text-center">
-          <img
-            src="/logo.png"
-            alt="Sri Lanka Police"
-            className="h-14 w-14 object-contain opacity-90"
-            draggable={false}
-          />
+          <div className="flex items-center gap-3">
+            <img
+              src="/logo.png"
+              alt="Sri Lanka Police"
+              className="h-14 w-14 object-contain opacity-90"
+              draggable={false}
+            />
+            <img
+              src="/texta.png"
+              alt="Texta World"
+              className="h-14 object-contain"
+              draggable={false}
+            />
+          </div>
           <div>
             <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
               {t("more.credits")}
             </p>
             <p className="mt-1.5 text-sm font-bold text-navy-900">{t("more.developedBy")}</p>
-            <p className="mt-0.5 text-xs font-medium text-saffron-600">{t("more.poweredBy")}</p>
           </div>
         </div>
       </div>

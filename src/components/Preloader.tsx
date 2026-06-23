@@ -38,10 +38,16 @@ export default function Preloader() {
       </div>
 
       {/* Powered-by footer */}
-      <div className="absolute inset-x-0 bottom-8 text-center">
+      <div className="absolute inset-x-0 bottom-8 flex flex-col items-center ">
         <p className="text-[11px] font-medium text-muted-foreground">
           {t("more.poweredBy")}
         </p>
+        <img
+          src="/texta.png"
+          alt="Texta World"
+          className="h-20 object-contain"
+          draggable={false}
+        />
       </div>
     </div>
   );
