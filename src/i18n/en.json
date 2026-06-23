@@ -75,7 +75,7 @@
   "dansal": {
     "title": "Dansal along the route",
     "none": "No active Dansal on this route.",
-    "type": { "food": "Food", "drink": "Drink", "water": "Water", "medical": "Medical", "other": "Other" },
+    "type": { "food": "Food", "drink": "Drink", "water": "Shower", "medical": "Hospitals", "other": "Other" },
     "inactive": "Closed",
     "open": "Open: {{hours}}"
   },

@@ -85,8 +85,8 @@
     "type": {
       "food": "ආහාර",
       "drink": "පාන",
-      "water": "ජලය",
-      "medical": "වෛද්‍ය",
+      "water": "ස්නානය",
+      "medical": "රෝහල්",
       "other": "වෙනත්"
     },
     "inactive": "වසා ඇත",
