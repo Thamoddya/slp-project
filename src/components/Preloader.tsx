@@ -18,9 +18,19 @@ export default function Preloader() {
         <div className="relative grid place-items-center">
           <span className="absolute h-48 w-48 rounded-full bg-saffron-100/60 blur-2xl preloader-breathe" />
           <div className="relative flex items-center gap-4 rounded-[28px] bg-white px-6 py-4 shadow-poson-lg preloader-float">
-            <img src="/logo.png" alt="Sri Lanka Police" className="h-16 w-16 object-contain" draggable={false} />
+            <img
+              src="/logo.png"
+              alt="Sri Lanka Police"
+              className="h-16 w-16 object-contain"
+              draggable={false}
+            />
             <span className="h-12 w-px bg-cream-200" />
-            <img src="/texta.png" alt="Texta World" className="h-12 object-contain" draggable={false} />
+            <img
+              src="/texta.png"
+              alt="Texta World"
+              className="h-12 object-contain"
+              draggable={false}
+            />
           </div>
         </div>
 
@@ -36,9 +46,9 @@ export default function Preloader() {
       </div>
 
       {/* Footer credit */}
-      <div className="absolute inset-x-0 bottom-9 text-center">
+      {/* <div className="absolute inset-x-0 bottom-9 text-center">
         <p className="text-[11px] font-medium text-muted-foreground">{t("more.developedBy")}</p>
-      </div>
+      </div> */}
     </div>
   );
 }
