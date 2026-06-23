@@ -1,6 +1,6 @@
 import type { NetworkNode, NetworkSegment, LatLng, RouteResult, DirectedGraph, GraphEdge } from "@/types";
 import { buildGraph } from "./graph";
-import { haversineMeters, nearestOnPolyline } from "./geo";
+import { haversineMeters, nearestOnPolyline, polylineLengthMeters } from "./geo";
 
 export const DEFAULT_SPEED_KMH = 18;
 export const SNAP_THRESHOLD_M = 300;
@@ -122,76 +122,99 @@ export function planRoute(
   const { bestSeg, bestNode } = snapToNetwork(startPoint, nodes, openSegments);
   const threshold = opts.snapThresholdMeters || SNAP_THRESHOLD_M;
 
-  const candidates: { nodeId: string; connector: number; alongMeters: number }[] = [];
+  type Candidate = { nodeId: string; connector: number; alongMeters: number };
 
+  // Candidates from snapping the start onto the nearby network.
+  const nearCandidates: Candidate[] = [];
   if (bestNode && bestNode.distMeters <= threshold) {
-    candidates.push({ nodeId: bestNode.node.id, connector: bestNode.distMeters, alongMeters: 0 });
+    nearCandidates.push({ nodeId: bestNode.node.id, connector: bestNode.distMeters, alongMeters: 0 });
   }
   if (bestSeg && bestSeg.distMeters <= threshold) {
-    candidates.push({
+    nearCandidates.push({
       nodeId: bestSeg.segment.toNodeId,
       connector: bestSeg.distMeters,
       alongMeters: bestSeg.remainingToEndMeters || 0,
     });
   }
 
-  // Outside the one-way zone: pilgrims legitimately approach entry points from
-  // far away, so fall back to routing from the nearest legal ENTRY node rather
-  // than refusing. (Direction correctness is unaffected — the route still runs
-  // strictly along the directed segments from that entry.)
+  // Fallback candidates: every legal ENTRY node. Pilgrims legitimately approach
+  // entries from outside the zone, and an entry can reach destinations that are
+  // one-way "behind" the user's current position — so when the direct snap can't
+  // reach the destination we route from the nearest usable entry instead.
+  const entryCandidates: Candidate[] = nodes
+    .filter((n) => n.isEntryPoint && n.id !== destNodeId)
+    .map((n) => ({ nodeId: n.id, connector: haversineMeters(startPoint, n), alongMeters: 0 }));
+
+  // ── Goals: ways to "arrive" at the destination ────────────────────────────
+  // Normally we route to the destination node itself. But a stop can also sit
+  // ON a one-way road rather than at a junction (e.g. a landmark mid-corridor).
+  // In that case we route to that road's FROM junction and travel along it (a
+  // legal one-way move) to the point nearest the stop.
+  type Goal = { node: string; alongMeters: number; connector: number; tail?: LatLng[] };
+  const destNodeObj = graph.nodes.get(destNodeId)!;
+  const destPoint: LatLng = { lat: destNodeObj.lat, lng: destNodeObj.lng };
+  const destThreshold = Math.max(threshold, 400);
+
+  const goals: Goal[] = [{ node: destNodeId, alongMeters: 0, connector: 0 }];
+  for (const seg of openSegments) {
+    if (!seg.polyline || seg.polyline.length < 2) continue;
+    if (seg.fromNodeId === destNodeId || seg.toNodeId === destNodeId) continue;
+    const r = nearestOnPolyline(destPoint, seg.polyline);
+    if (!r || r.distMeters > destThreshold) continue;
+    const along = Math.max(0, polylineLengthMeters(seg.polyline) - (r.remainingToEndMeters || 0));
+    const tail = seg.polyline.slice(0, r.index + 1).map((p) => ({ lat: p.lat, lng: p.lng }));
+    tail.push({ lat: r.point.lat, lng: r.point.lng });
+    goals.push({ node: seg.fromNodeId, alongMeters: along, connector: r.distMeters, tail });
+  }
+
+  type Chosen = Candidate & { path: ShortestPathResult; goal: Goal; totalMeters: number };
+  const pickBest = (cands: Candidate[]): Chosen | null => {
+    let chosen: Chosen | null = null;
+    for (const c of cands) {
+      for (const g of goals) {
+        const path = shortestPath(graph, c.nodeId, g.node);
+        if (!path) continue;
+        const total = c.connector + c.alongMeters + path.distanceMeters + g.alongMeters + g.connector;
+        if (!chosen || total < chosen.totalMeters) chosen = { ...c, path, goal: g, totalMeters: total };
+      }
+    }
+    return chosen;
+  };
+
+  // Prefer a route from where the user actually is; otherwise route from an entry.
   let viaEntry = false;
-  if (candidates.length === 0) {
-    const entries = nodes.filter((n) => n.isEntryPoint);
-    if (entries.length === 0) {
-      return {
-        ok: false,
-        reason: "far-from-network",
-        entryNodeId: bestNode?.node?.id ?? null,
-        snappedPoint: bestSeg?.point ?? null,
-      };
-    }
-    for (const n of entries) {
-      candidates.push({ nodeId: n.id, connector: haversineMeters(startPoint, n), alongMeters: 0 });
-    }
+  let best = pickBest(nearCandidates);
+  if (!best) {
+    best = pickBest(entryCandidates);
     viaEntry = true;
   }
 
-  let best: {
-    nodeId: string;
-    connector: number;
-    alongMeters: number;
-    path: ShortestPathResult;
-    totalMeters: number;
-  } | null = null;
-
-  for (const c of candidates) {
-    const path = shortestPath(graph, c.nodeId, destNodeId);
-    if (!path) continue;
-    const total = c.connector + c.alongMeters + path.distanceMeters;
-    if (!best || total < best.totalMeters) {
-      best = { ...c, path, totalMeters: total };
-    }
-  }
-
   if (!best) {
+    // Nothing reachable. If the user wasn't near the network at all, nudge them
+    // to an entry; otherwise the destination is genuinely unreachable.
+    const reason = nearCandidates.length === 0 && entryCandidates.length === 0
+      ? "far-from-network"
+      : "no-route";
     return {
       ok: false,
-      reason: "no-route",
+      reason,
       entryNodeId: bestNode?.node?.id ?? null,
       snappedPoint: bestSeg?.point ?? null,
     };
   }
 
   const polyline: LatLng[] = [];
+  const pushPt = (pt: LatLng) => {
+    const last = polyline[polyline.length - 1];
+    if (!last || last.lat !== pt.lat || last.lng !== pt.lng) polyline.push(pt);
+  };
   for (const edge of best.path.edges) {
-    const seg = edge.segment;
-    for (const pt of seg.polyline) {
-      const last = polyline[polyline.length - 1];
-      if (!last || last.lat !== pt.lat || last.lng !== pt.lng) polyline.push(pt);
-    }
+    for (const pt of edge.segment.polyline) pushPt(pt);
   }
+  // Final approach along the road the stop sits on.
+  if (best.goal.tail) for (const pt of best.goal.tail) pushPt(pt);
 
-  const distanceMeters = best.path.distanceMeters + best.alongMeters;
+  const distanceMeters = best.path.distanceMeters + best.alongMeters + best.goal.alongMeters;
   const etaMinutes = Math.round((distanceMeters / 1000 / speedKmh) * 60);
 
   return {

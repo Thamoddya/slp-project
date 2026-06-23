@@ -121,4 +121,20 @@ describe("planRoute — start snapping", () => {
     expect(r.ok).toBe(false);
     if (!r.ok) expect(r.reason).toBe("no-route");
   });
+
+  it("routes to a stop that sits ON a road (no segment ends at it)", () => {
+    // M is a loose node near the middle of A→B, with no segment touching it.
+    const withStop: NetworkNode[] = [
+      ...nodes,
+      { id: "M", name_en: "M", name_si: "M", lat: 8.3503, lng: 80.385, isEntryPoint: false, isExitPoint: false },
+    ];
+    const segments = [seg("AB", "A", "B"), seg("BC", "B", "C")];
+    const start = { lat: 8.3501, lng: 80.3801 }; // near A
+    const r = planRoute(withStop, segments, start, "M");
+    expect(r.ok).toBe(true);
+    if (r.ok) {
+      expect(r.nodePath[0]).toBe("A");
+      expect(r.polyline.length).toBeGreaterThan(1);
+    }
+  });
 });
