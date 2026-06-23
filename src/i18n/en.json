@@ -84,7 +84,7 @@
     "none": "No active Dansal on this route.",
     "type": {
       "food": "Food",
-      "drink": "Drink",
+      "drink": "Restaurant",
       "water": "Shower",
       "medical": "Hospitals",
       "other": "Other"
