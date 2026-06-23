@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { MapPin, Navigation, Search, X, LocateFixed, Plus } from "lucide-react";
+import { MapPin, Navigation, Search, X, LocateFixed, Plus, ParkingSquare } from "lucide-react";
+import { dansalIcon, dansalTint, dansalColor } from "@/lib/dansal";
 import TopBar from "@/components/layout/TopBar";
 import BottomNav, { type PublicTab } from "@/components/layout/BottomNav";
 import BottomSheet from "@/components/ui/BottomSheet";
@@ -20,11 +21,6 @@ import { Badge } from "@/components/ui/badge";
 import RouteResult from "./RouteResult";
 import ReportModal from "@/components/ReportModal";
 import type { NetworkNode, Dansal, Parking, RouteResult as RouteResultType, GeoPosition, LatLng } from "@/types";
-
-const DANSAL_EMOJI: Record<string, string> = { food: "🍛", drink: "🥤", water: "💧", medical: "➕", other: "⭐" };
-const DANSAL_BG: Record<string, string> = {
-  food: "#fff0e6", drink: "#e9f3ff", water: "#e6f7ff", medical: "#ffe9e9", other: "#fff7e0",
-};
 
 type Focus = { lat: number; lng: number; zoom?: number; nonce: number };
 
@@ -428,28 +424,36 @@ function PlacesList({
     <div className="pb-1">
       <p className="mb-3 text-xs text-muted-foreground">{t("places.subtitle")}</p>
       <div className="mb-3 flex flex-wrap gap-2">
-        {TYPES.map((ty) => (
-          <Chip key={ty} active={type === ty} onClick={() => setType(ty)}>
-            {ty === "all" ? t("filters.all") : `${DANSAL_EMOJI[ty]} ${t(`dansal.type.${ty}`)}`}
-          </Chip>
-        ))}
+        {TYPES.map((ty) => {
+          const Icon = ty === "all" ? null : dansalIcon(ty);
+          return (
+            <Chip key={ty} active={type === ty} onClick={() => setType(ty)}>
+              <span className="flex items-center gap-1.5">
+                {Icon && <Icon className="h-3.5 w-3.5" />}
+                {ty === "all" ? t("filters.all") : t(`dansal.type.${ty}`)}
+              </span>
+            </Chip>
+          );
+        })}
       </div>
 
       {list.length === 0 ? (
         <EmptyBox>{t("places.none")}</EmptyBox>
       ) : (
-        <div className="space-y-2">
-          {list.map((d) => (
+        <div className="space-y-2.5">
+          {list.map((d) => {
+            const Icon = dansalIcon(d.type);
+            return (
             <button
               key={d.id}
               onClick={() => onFocus(d)}
-              className={`flex w-full items-center gap-3 rounded-xl border border-cream-200 bg-white p-3 text-left transition-colors hover:bg-cream-50 ${!d.active ? "opacity-50" : ""}`}
+              className={`flex w-full items-center gap-3 rounded-2xl border border-cream-200 bg-white p-3 text-left transition-all hover:border-navy-200 hover:shadow-poson active:scale-[0.99] ${!d.active ? "opacity-50" : ""}`}
             >
               <div
-                className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl text-lg"
-                style={{ background: DANSAL_BG[d.type] || "#f1f4fb" }}
+                className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl"
+                style={{ background: dansalTint(d.type), color: dansalColor(d.type) }}
               >
-                {DANSAL_EMOJI[d.type] || "⭐"}
+                <Icon className="h-5 w-5" />
               </div>
               <div className="min-w-0 flex-1">
                 <p className="truncate text-sm font-semibold text-navy-900">{localizedName(d, lang)}</p>
@@ -459,7 +463,8 @@ function PlacesList({
               </div>
               {!d.active && <Badge variant="inactive">{t("dansal.inactive")}</Badge>}
             </button>
-          ))}
+            );
+          })}
         </div>
       )}
     </div>
@@ -494,15 +499,15 @@ function ParkingList({
       {list.length === 0 ? (
         <EmptyBox>{t("parkingTab.none")}</EmptyBox>
       ) : (
-        <div className="space-y-2">
+        <div className="space-y-2.5">
           {list.map((p) => (
             <button
               key={p.id}
               onClick={() => onFocus(p)}
-              className="flex w-full items-center gap-3 rounded-xl border border-cream-200 bg-white p-3 text-left transition-colors hover:bg-cream-50"
+              className="flex w-full items-center gap-3 rounded-2xl border border-cream-200 bg-white p-3 text-left transition-all hover:border-navy-200 hover:shadow-poson active:scale-[0.99]"
             >
-              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-cream-100 text-sm font-black text-navy-800">
-                P
+              <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-navy-50 text-navy-700">
+                <ParkingSquare className="h-5 w-5" />
               </div>
               <div className="min-w-0 flex-1">
                 <p className="truncate text-sm font-semibold text-navy-900">{localizedName(p, lang)}</p>

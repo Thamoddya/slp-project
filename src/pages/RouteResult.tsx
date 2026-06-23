@@ -1,15 +1,11 @@
 import { useMemo } from "react";
 import { useTranslation } from "react-i18next";
-import { AlertTriangle, ArrowRight, Clock, Ruler, Navigation } from "lucide-react";
+import { AlertTriangle, ArrowRight, Clock, Ruler, Navigation, ParkingSquare, Utensils } from "lucide-react";
 import { formatDistance, formatEta, localizedName } from "@/components/format";
+import { dansalIcon, dansalTint, dansalColor } from "@/lib/dansal";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import type { RouteResult as RouteResultType, NetworkState } from "@/types";
-
-const DANSAL_EMOJI: Record<string, string> = { food: "🍛", drink: "🥤", water: "💧", medical: "➕", other: "⭐" };
-const DANSAL_BG: Record<string, string> = {
-  food: "#fff0e6", drink: "#e9f3ff", water: "#e6f7ff", medical: "#ffe9e9", other: "#fff7e0",
-};
 
 interface RouteResultProps {
   route: RouteResultType | null;
@@ -152,10 +148,10 @@ export default function RouteResult({
       {/* Filter toggles */}
       <div className="mb-1 flex flex-wrap gap-2">
         <FilterChip active={showDansal} onClick={() => setShowDansal((v) => !v)}>
-          🍛 {t("filters.dansal")}
+          <Utensils className="h-3.5 w-3.5" /> {t("filters.dansal")}
         </FilterChip>
         <FilterChip active={showParking} onClick={() => setShowParking((v) => !v)}>
-          🅿 {t("filters.parking")}
+          <ParkingSquare className="h-3.5 w-3.5" /> {t("filters.parking")}
         </FilterChip>
       </div>
       {showParking && (
@@ -193,16 +189,18 @@ export default function RouteResult({
             <InfoBox>{t("dansal.none")}</InfoBox>
           ) : (
             <div className="mb-4 space-y-2">
-              {dansalOnRoute.map((d) => (
+              {dansalOnRoute.map((d) => {
+                const Icon = dansalIcon(d.type);
+                return (
                 <div
                   key={d.id}
-                  className={`flex items-center gap-3 rounded-xl border border-cream-200 bg-white p-3 ${!d.active ? "opacity-50" : ""}`}
+                  className={`flex items-center gap-3 rounded-2xl border border-cream-200 bg-white p-3 ${!d.active ? "opacity-50" : ""}`}
                 >
                   <div
-                    className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl text-lg"
-                    style={{ background: DANSAL_BG[d.type] || "#f1f4fb" }}
+                    className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl"
+                    style={{ background: dansalTint(d.type), color: dansalColor(d.type) }}
                   >
-                    {DANSAL_EMOJI[d.type] || "⭐"}
+                    <Icon className="h-5 w-5" />
                   </div>
                   <div className="min-w-0 flex-1">
                     <p className="font-semibold text-navy-900 text-sm">{localizedName(d, lang)}</p>
@@ -214,7 +212,8 @@ export default function RouteResult({
                     <Badge variant="inactive">{t("dansal.inactive")}</Badge>
                   )}
                 </div>
-              ))}
+                );
+              })}
             </div>
           )}
         </>
@@ -229,9 +228,9 @@ export default function RouteResult({
           ) : (
             <div className="mb-4 space-y-2">
               {parkingOnRoute.map((p) => (
-                <div key={p.id} className="flex items-center gap-3 rounded-xl border border-cream-200 bg-white p-3">
-                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-cream-100 text-sm font-black text-navy-800">
-                    P
+                <div key={p.id} className="flex items-center gap-3 rounded-2xl border border-cream-200 bg-white p-3">
+                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-navy-50 text-navy-700">
+                    <ParkingSquare className="h-5 w-5" />
                   </div>
                   <div className="min-w-0 flex-1">
                     <p className="font-semibold text-navy-900 text-sm">{localizedName(p, lang)}</p>
@@ -308,7 +307,7 @@ function FilterChip({
   return (
     <button
       onClick={onClick}
-      className={`rounded-full border-2 px-3.5 py-1.5 text-xs font-semibold transition-all duration-150 ${
+      className={`inline-flex items-center gap-1.5 rounded-full border-2 px-3.5 py-1.5 text-xs font-semibold transition-all duration-150 ${
         active
           ? "bg-navy-700 text-white border-navy-700"
           : "bg-white text-muted-foreground border-cream-200 hover:border-navy-200"

@@ -2,28 +2,35 @@ import { useTranslation } from "react-i18next";
 
 /**
  * Full-screen splash shown while the road network + map boot.
- * Uses the SLP crest (public/logo.png) on a soft cream backdrop.
+ * Poson-poya feel: a calm pure-white field, a soft full-moon halo behind the
+ * SLP crest, and gentle motion — professional and smooth, not flashy.
  */
 export default function Preloader() {
   const { t } = useTranslation();
 
   return (
-    <div className="fixed inset-0 z-[100] flex flex-col items-center justify-center bg-gradient-to-b from-cream-50 to-cream-100 px-8">
-      <div className="flex flex-col items-center gap-6 animate-fade-in">
-        {/* Crest in a soft halo */}
-        <div className="relative flex h-32 w-32 items-center justify-center rounded-[28px] bg-white shadow-poson-lg">
-          <span className="absolute inset-0 rounded-[28px] ring-1 ring-navy-100" />
-          <img
-            src="/logo.png"
-            alt="Sri Lanka Police"
-            className="h-24 w-24 object-contain animate-pulse"
-            draggable={false}
-          />
+    <div className="preloader-fade fixed inset-0 z-[100] flex flex-col items-center justify-center overflow-hidden bg-white px-8">
+      {/* Soft Poson glow field */}
+      <div className="pointer-events-none absolute inset-0 preloader-glow" />
+
+      <div className="relative flex flex-col items-center gap-7">
+        {/* Crest inside a full-moon halo */}
+        <div className="relative grid place-items-center">
+          <span className="absolute h-44 w-44 rounded-full bg-saffron-100/60 blur-2xl preloader-breathe" />
+          <span className="absolute h-32 w-32 rounded-full ring-1 ring-saffron-200 preloader-ring" />
+          <div className="relative grid h-28 w-28 place-items-center rounded-[30px] bg-white shadow-poson-lg preloader-float">
+            <img
+              src="/logo.png"
+              alt="Sri Lanka Police"
+              className="h-20 w-20 object-contain"
+              draggable={false}
+            />
+          </div>
         </div>
 
         {/* Wordmark */}
         <div className="text-center">
-          <h1 className="text-lg font-black tracking-tight text-navy-900">
+          <h1 className="text-[19px] font-black tracking-tight text-navy-900">
             {t("app.title")}
           </h1>
           <p className="mt-1 text-xs font-medium text-muted-foreground">
@@ -31,23 +38,16 @@ export default function Preloader() {
           </p>
         </div>
 
-        {/* Loader bar */}
-        <div className="mt-2 h-1.5 w-44 overflow-hidden rounded-full bg-cream-300">
-          <div className="h-full w-1/2 rounded-full bg-navy-700 preloader-bar" />
+        {/* Slim shimmer loader */}
+        <div className="h-1.5 w-48 overflow-hidden rounded-full bg-cream-200">
+          <div className="h-full w-1/2 rounded-full bg-gradient-to-r from-navy-700 via-navy-500 to-saffron-400 preloader-bar" />
         </div>
       </div>
 
       {/* Powered-by footer */}
-      <div className="absolute inset-x-0 bottom-8 flex flex-col items-center ">
-        <p className="text-[11px] font-medium text-muted-foreground">
-          {t("more.poweredBy")}
-        </p>
-        <img
-          src="/texta.png"
-          alt="Texta World"
-          className="h-20 object-contain"
-          draggable={false}
-        />
+      <div className="absolute inset-x-0 bottom-9 flex flex-col items-center gap-1">
+        <p className="text-[11px] font-medium text-muted-foreground">{t("more.poweredBy")}</p>
+        <img src="/texta.png" alt="Texta World" className="h-12 object-contain" draggable={false} />
       </div>
     </div>
   );

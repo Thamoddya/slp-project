@@ -12,53 +12,63 @@ import { POSON_MAP_STYLE } from "@/lib/constants";
 import { sampleArrowPoints } from "@/routing/geo";
 
 // ─── Marker HTML factories ───────────────────────────────────────────────────
+// Clean white SVG glyphs inside coloured tear-drop pins (no emoji) for a
+// consistent, professional look across the whole map.
 
-function nodePin(n: NetworkNode): string {
-  const bg = n.isEntryPoint ? "#16a34a" : n.isExitPoint ? "#dc2626" : "#1b3a72";
-  const icon = n.isEntryPoint ? "▶" : n.isExitPoint ? "■" : "•";
+const svg = (inner: string, size = 16): string =>
+  `<svg viewBox="0 0 24 24" width="${size}" height="${size}" style="display:block">${inner}</svg>`;
+
+// category → strong pin colour + white glyph
+const DANSAL_COLOR: Record<string, string> = {
+  food: "#e8590c", drink: "#2563eb", water: "#0891b2", medical: "#dc2626", other: "#d97706",
+};
+const GLYPH: Record<string, string> = {
+  food: `<path d="M3 11 A9 9 0 0 0 21 11 Z" fill="#fff"/><path d="M2.5 11 H21.5" stroke="#fff" stroke-width="2" stroke-linecap="round"/>`,
+  drink: `<path d="M7 7 H17 L15.8 19 A1.6 1.6 0 0 1 14.2 20.4 H9.8 A1.6 1.6 0 0 1 8.2 19 Z" fill="#fff"/>`,
+  water: `<path d="M12 3 C12 3 18.5 10.5 18.5 14.5 A6.5 6.5 0 0 1 5.5 14.5 C5.5 10.5 12 3 12 3 Z" fill="#fff"/>`,
+  medical: `<path d="M10 4 H14 V8 H18 V12 H14 V16 H10 V12 H6 V8 H10 Z" fill="#fff"/>`,
+  other: `<path d="M12 3.5 L14.6 8.8 L20.4 9.6 L16.2 13.7 L17.2 19.5 L12 16.8 L6.8 19.5 L7.8 13.7 L3.6 9.6 L9.4 8.8 Z" fill="#fff"/>`,
+};
+const NODE_GLYPH = {
+  entry: `<path d="M8 5 L19 12 L8 19 Z" fill="#fff"/>`,
+  exit: `<rect x="7" y="7" width="10" height="10" rx="2" fill="#fff"/>`,
+  plain: `<circle cx="12" cy="12" r="4.5" fill="#fff"/>`,
+};
+const FLAG_GLYPH = `<path d="M7 4 V20.5" stroke="#fff" stroke-width="2.2" stroke-linecap="round"/><path d="M7.6 5 H16.5 L14.2 8.2 L16.5 11.4 H7.6 Z" fill="#fff"/>`;
+
+function pinShell(bg: string, inner: string, size = 32): string {
   return `<div style="
-    width:30px;height:30px;border-radius:50% 50% 50% 0;transform:rotate(-45deg);
-    background:${bg};border:2px solid #fff;box-shadow:0 2px 8px rgba(0,0,0,.30);
+    width:${size}px;height:${size}px;border-radius:50% 50% 50% 0;transform:rotate(-45deg);
+    background:${bg};border:2px solid #fff;box-shadow:0 4px 12px rgba(16,24,40,.28);
     display:grid;place-items:center;cursor:pointer;">
-    <span style="transform:rotate(45deg);font-size:11px;color:#fff;font-weight:900;line-height:1;">${icon}</span>
+    <span style="transform:rotate(45deg);display:grid;place-items:center;">${inner}</span>
   </div>`;
 }
 
-const DANSAL_EMOJI: Record<string, string> = { food: "🍛", drink: "🥤", water: "💧", medical: "➕", other: "⭐" };
+function nodePin(n: NetworkNode): string {
+  const bg = n.isEntryPoint ? "#16a34a" : n.isExitPoint ? "#dc2626" : "#1b3a72";
+  const g = n.isEntryPoint ? NODE_GLYPH.entry : n.isExitPoint ? NODE_GLYPH.exit : NODE_GLYPH.plain;
+  return pinShell(bg, svg(g, 15), 30);
+}
 
 function dansalPin(type: string): string {
-  return `<div style="
-    width:34px;height:34px;border-radius:50% 50% 50% 0;transform:rotate(-45deg);
-    background:#e8590c;border:2px solid #fff;box-shadow:0 2px 8px rgba(0,0,0,.25);
-    display:grid;place-items:center;">
-    <span style="transform:rotate(45deg);font-size:16px;line-height:1;">${DANSAL_EMOJI[type] || "⭐"}</span>
-  </div>`;
+  return pinShell(DANSAL_COLOR[type] || "#d97706", svg(GLYPH[type] || GLYPH.other, 17), 34);
 }
 
 function parkingPin(status: string): string {
   const COLOR: Record<string, string> = { available: "#16a34a", filling: "#d97706", full: "#dc2626" };
-  const bg = COLOR[status] || "#1b3a72";
-  return `<div style="
-    width:30px;height:30px;border-radius:50% 50% 50% 0;transform:rotate(-45deg);
-    background:${bg};border:2px solid #fff;box-shadow:0 2px 8px rgba(0,0,0,.25);
-    display:grid;place-items:center;">
-    <span style="transform:rotate(45deg);font-size:13px;font-weight:900;color:#fff;line-height:1;">P</span>
-  </div>`;
+  const inner = `<span style="font:900 13px/1 Inter,system-ui,sans-serif;color:#fff;">P</span>`;
+  return pinShell(COLOR[status] || "#1b3a72", inner, 30);
+}
+
+function destPin(): string {
+  return pinShell("#16203a", svg(FLAG_GLYPH, 16), 32);
 }
 
 function userDot(): string {
   return `<div style="
-    width:20px;height:20px;border-radius:50%;background:#1b3a72;border:3px solid #fff;
-    box-shadow:0 0 0 6px rgba(27,58,114,.20);">
-  </div>`;
-}
-
-function destPin(): string {
-  return `<div style="
-    width:32px;height:32px;border-radius:50% 50% 50% 0;transform:rotate(-45deg);
-    background:#16203a;border:2px solid #fff;box-shadow:0 2px 8px rgba(0,0,0,.35);
-    display:grid;place-items:center;">
-    <span style="transform:rotate(45deg);font-size:15px;line-height:1;">🏁</span>
+    width:18px;height:18px;border-radius:50%;background:#1b3a72;border:3px solid #fff;
+    box-shadow:0 0 0 6px rgba(27,58,114,.18);">
   </div>`;
 }
 

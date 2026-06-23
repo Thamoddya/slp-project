@@ -14,7 +14,9 @@ export default function TopBar({ right, className }: TopBarProps) {
   return (
     <header
       className={cn(
-        "flex items-center gap-3 px-4 py-3 pt-safe bg-gradient-to-r from-navy-800 to-navy-700 text-white shadow-topbar z-50 shrink-0",
+        "relative flex items-center gap-3 px-4 py-3 pt-safe bg-gradient-to-r from-navy-900 via-navy-800 to-navy-700 text-white shadow-topbar z-50 shrink-0",
+        // Poson-poya warm accent hairline along the bottom edge
+        "after:absolute after:inset-x-0 after:bottom-0 after:h-[3px] after:bg-gradient-to-r after:from-saffron-400 after:via-saffron-500 after:to-saffron-300",
         className
       )}
       style={{ paddingTop: "max(12px, env(safe-area-inset-top))" }}

@@ -6,7 +6,14 @@
     "loading": "Loading map and road network…"
   },
   "lang": { "toggle": "සිංහල", "current": "English" },
-  "nav": { "public": "Routes", "admin": "Admin", "map": "Map", "places": "Places", "parking": "Parking", "more": "More" },
+  "nav": {
+    "public": "Routes",
+    "admin": "Admin",
+    "map": "Map",
+    "places": "Places",
+    "parking": "Parking",
+    "more": "More"
+  },
   "map": {
     "yourLocation": "Your location",
     "locating": "Finding your location…",
@@ -33,7 +40,7 @@
     "report": "Report a problem",
     "about": "About this app",
     "credits": "Design & Development",
-    "developedBy": "Designed & developed by Thamoddya Rashmitha",
+    "developedBy": "By Thamoddya Rashmitha",
     "poweredBy": "Powered by Texta World",
     "close": "Close"
   },
@@ -75,7 +82,13 @@
   "dansal": {
     "title": "Dansal along the route",
     "none": "No active Dansal on this route.",
-    "type": { "food": "Food", "drink": "Drink", "water": "Shower", "medical": "Hospitals", "other": "Other" },
+    "type": {
+      "food": "Food",
+      "drink": "Drink",
+      "water": "Shower",
+      "medical": "Hospitals",
+      "other": "Other"
+    },
     "inactive": "Closed",
     "open": "Open: {{hours}}"
   },
@@ -85,7 +98,12 @@
     "capacity": "{{n}} spaces",
     "status": { "available": "Available", "filling": "Filling", "full": "Full" }
   },
-  "vehicle": { "car": "Car", "bus": "Bus", "threewheeler": "Three-wheeler", "motorbike": "Motorbike" },
+  "vehicle": {
+    "car": "Car",
+    "bus": "Bus",
+    "threewheeler": "Three-wheeler",
+    "motorbike": "Motorbike"
+  },
   "report": {
     "button": "Report a problem",
     "title": "Report a problem",
@@ -103,7 +121,12 @@
     "signOut": "Sign out",
     "loginError": "Login failed. Check your credentials.",
     "demoNote": "Demo mode: use admin@police.lk / poson2026",
-    "tabs": { "editor": "Map Editor", "control": "Live Control", "validate": "Validation", "data": "Backup" },
+    "tabs": {
+      "editor": "Map Editor",
+      "control": "Live Control",
+      "validate": "Validation",
+      "data": "Backup"
+    },
     "editor": {
       "title": "Map Editor",
       "mode": "Tool",
