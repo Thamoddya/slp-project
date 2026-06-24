@@ -81,8 +81,21 @@ describe("directed routing — one-way correctness", () => {
   });
 
   it("picks the shorter of two legal paths", () => {
-    const segments = [seg("AB", "A", "B"), seg("BC", "B", "C"), seg("AC", "A", "C")];
-    const g = buildGraph(nodes, segments);
+    // B is off the direct A→C line, so A→B→C is a genuine detour (not colinear).
+    const ns: NetworkNode[] = [
+      { id: "A", name_en: "A", name_si: "A", lat: 8.35, lng: 80.38, isEntryPoint: false, isExitPoint: false },
+      { id: "B", name_en: "B", name_si: "B", lat: 8.36, lng: 80.39, isEntryPoint: false, isExitPoint: false },
+      { id: "C", name_en: "C", name_si: "C", lat: 8.35, lng: 80.4, isEntryPoint: false, isExitPoint: false },
+    ];
+    const mk = (id: string, from: string, to: string): NetworkSegment => {
+      const a = ns.find((n) => n.id === from)!;
+      const b = ns.find((n) => n.id === to)!;
+      return {
+        id, fromNodeId: from, toNodeId: to, status: "open", name_en: id, name_si: id,
+        lengthMeters: 0, polyline: [{ lat: a.lat, lng: a.lng }, { lat: b.lat, lng: b.lng }],
+      };
+    };
+    const g = buildGraph(ns, [mk("AB", "A", "B"), mk("BC", "B", "C"), mk("AC", "A", "C")]);
     const r = shortestPath(g, "A", "C");
     expect(r!.nodePath).toEqual(["A", "C"]);
   });
@@ -120,6 +133,28 @@ describe("planRoute — start snapping", () => {
     const r = planRoute(nodes, segments, start, "A");
     expect(r.ok).toBe(false);
     if (!r.ok) expect(r.reason).toBe("no-route");
+  });
+
+  it("splits a long road at a junction so branches off it are routable", () => {
+    // One long road A→C passes straight through M's location (a junction with
+    // no segment ending at it). A separate branch M→D leads to an exit.
+    const withJunction: NetworkNode[] = [
+      { id: "A", name_en: "A", name_si: "A", lat: 8.35, lng: 80.38, isEntryPoint: true, isExitPoint: false },
+      { id: "C", name_en: "C", name_si: "C", lat: 8.35, lng: 80.4, isEntryPoint: false, isExitPoint: true },
+      { id: "M", name_en: "M", name_si: "M", lat: 8.35, lng: 80.39, isEntryPoint: false, isExitPoint: false },
+      { id: "D", name_en: "D", name_si: "D", lat: 8.34, lng: 80.39, isEntryPoint: false, isExitPoint: true },
+    ];
+    const segAC: NetworkSegment = {
+      id: "AC", fromNodeId: "A", toNodeId: "C", status: "open", name_en: "AC", name_si: "AC",
+      lengthMeters: 0, polyline: [{ lat: 8.35, lng: 80.38 }, { lat: 8.35, lng: 80.4 }],
+    };
+    const segMD: NetworkSegment = {
+      id: "MD", fromNodeId: "M", toNodeId: "D", status: "open", name_en: "MD", name_si: "MD",
+      lengthMeters: 0, polyline: [{ lat: 8.35, lng: 80.39 }, { lat: 8.34, lng: 80.39 }],
+    };
+    const r = planRoute(withJunction, [segAC, segMD], { lat: 8.3501, lng: 80.3801 }, "D");
+    expect(r.ok).toBe(true);
+    if (r.ok) expect(r.nodePath).toContain("M");
   });
 
   it("routes to a stop that sits ON a road (no segment ends at it)", () => {
