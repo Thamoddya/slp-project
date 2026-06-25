@@ -72,6 +72,18 @@ function userDot(): string {
   </div>`;
 }
 
+// Draggable pin for the point currently being placed/edited in the admin editor.
+function draftPin(): string {
+  return `<div style="position:relative;display:grid;place-items:center;">
+    <div style="position:absolute;width:42px;height:42px;border-radius:50%;background:rgba(220,38,38,.18);"></div>
+    <div style="width:38px;height:38px;border-radius:50% 50% 50% 0;transform:rotate(-45deg);
+      background:#dc2626;border:3px solid #fff;box-shadow:0 6px 16px rgba(16,24,40,.4);
+      display:grid;place-items:center;cursor:grab;">
+      <span style="transform:rotate(45deg);"><svg viewBox="0 0 24 24" width="16" height="16" style="display:block"><path d="M12 2 v6 M12 16 v6 M2 12 h6 M16 12 h6" stroke="#fff" stroke-width="2.4" stroke-linecap="round"/><circle cx="12" cy="12" r="3" fill="#fff"/></svg></span>
+    </div>
+  </div>`;
+}
+
 const MAP_ID = () => import.meta.env.VITE_GOOGLE_MAPS_MAP_ID || "DEMO_MAP_ID";
 
 // ─── Public map inner (lives inside a <Map>) ─────────────────────────────────
@@ -244,6 +256,11 @@ export interface AdminMapViewProps {
   dansal: Dansal[];
   parking: Parking[];
   draftPolyline?: LatLng[];
+  /** A single point being placed/edited (node, dansal or parking) — draggable. */
+  draftPoint?: { lat: number; lng: number; kind: string } | null;
+  onDraftMove?: (lat: number, lng: number) => void;
+  userPos?: LatLng | null;
+  focus?: { lat: number; lng: number; zoom?: number; nonce: number } | null;
   overlayUrl?: string;
   overlayBounds?: [[number, number], [number, number]];
   overlayOpacity?: number;
@@ -263,6 +280,10 @@ function AdminMapContent({
   dansal,
   parking,
   draftPolyline,
+  draftPoint,
+  onDraftMove,
+  userPos,
+  focus,
   overlayUrl,
   overlayBounds,
   overlayOpacity = 0.5,
@@ -289,6 +310,13 @@ function AdminMapContent({
     }
     return () => { overlayRef.current?.setMap(null); };
   }, [map, overlayUrl, overlayBounds, overlayOpacity]);
+
+  useEffect(() => {
+    if (!map || !focus) return;
+    map.panTo({ lat: focus.lat, lng: focus.lng });
+    if (focus.zoom) map.setZoom(focus.zoom);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [map, focus?.nonce]);
 
   return (
     <>
@@ -351,6 +379,27 @@ function AdminMapContent({
           <div dangerouslySetInnerHTML={{ __html: parkingPin(p.status) }} />
         </AdvancedMarker>
       ))}
+
+      {/* Admin's own location */}
+      {userPos && (
+        <AdvancedMarker position={{ lat: userPos.lat, lng: userPos.lng }}>
+          <div dangerouslySetInnerHTML={{ __html: userDot() }} />
+        </AdvancedMarker>
+      )}
+
+      {/* Draft point being placed/edited — draggable so it's easy to aim */}
+      {draftPoint && (
+        <AdvancedMarker
+          position={{ lat: draftPoint.lat, lng: draftPoint.lng }}
+          draggable
+          onDragEnd={(e) => {
+            const ll = e.latLng;
+            if (ll && onDraftMove) onDraftMove(ll.lat(), ll.lng());
+          }}
+        >
+          <div dangerouslySetInnerHTML={{ __html: draftPin() }} />
+        </AdvancedMarker>
+      )}
     </>
   );
 }

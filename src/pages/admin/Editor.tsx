@@ -1,7 +1,8 @@
-import { useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { MousePointer2, CircleDot, Route, UtensilsCrossed, ParkingSquare, ImagePlus, X, Save, Trash2, PanelLeftClose, PanelLeftOpen, Check, MapPin } from "lucide-react";
+import { MousePointer2, CircleDot, Route, UtensilsCrossed, ParkingSquare, ImagePlus, X, Save, Trash2, PanelLeftClose, PanelLeftOpen, Check, MapPin, LocateFixed, Navigation } from "lucide-react";
 import { AdminMapView } from "@/components/map/GoogleMapView";
+import { useGeolocation } from "@/hooks/useGeolocation";
 import repo from "@/data/repo";
 import { polylineLengthMeters } from "@/routing/geo";
 import { localizedName } from "@/components/format";
@@ -40,7 +41,47 @@ export default function Editor({ net }: { net: NetworkState }) {
   const [overlay, setOverlay] = useState<{ url: string; bounds: [[number, number], [number, number]]; opacity: number } | null>(null);
   const overlayInputRef = useRef<HTMLInputElement>(null);
 
+  const geo = useGeolocation();
+  const [focus, setFocus] = useState<{ lat: number; lng: number; zoom?: number; nonce: number } | null>(null);
+  const pendingLocate = useRef(false);
+
   const nodeById = useMemo(() => Object.fromEntries(net.nodes.map((n) => [n.id, n])), [net.nodes]);
+
+  // The single point currently being placed/edited (node / dansal / parking).
+  const draftPoint = useMemo(() => {
+    if (!draft || draft.kind === "segment") return null;
+    return { lat: draft.lat, lng: draft.lng, kind: draft.kind };
+  }, [draft]);
+
+  // Drop or move the current point to the admin's GPS location ("Locate me").
+  const applyLocate = (pos: { lat: number; lng: number }) => {
+    setFocus({ lat: pos.lat, lng: pos.lng, zoom: 17, nonce: Date.now() });
+    if (draft && draft.kind !== "segment") {
+      setDraft({ ...draft, lat: pos.lat, lng: pos.lng });
+    } else if (mode === "node") {
+      setDraft({ kind: "node", lat: pos.lat, lng: pos.lng, name_si: "", name_en: "", isEntryPoint: false, isExitPoint: false });
+      setPanelOpen(true);
+    } else if (mode === "dansal") {
+      setDraft({ kind: "dansal", lat: pos.lat, lng: pos.lng, name_si: "", name_en: "", type: "food", active: true, openHours: "", nearestSegmentId: "" });
+      setPanelOpen(true);
+    } else if (mode === "parking") {
+      setDraft({ kind: "parking", lat: pos.lat, lng: pos.lng, name_si: "", name_en: "", capacity: 100, status: "available", vehicleTypes: ["car"], nearestSegmentId: "" });
+      setPanelOpen(true);
+    }
+  };
+
+  const locateMe = () => {
+    if (geo.position) applyLocate(geo.position);
+    else { pendingLocate.current = true; geo.start(); }
+  };
+
+  useEffect(() => {
+    if (pendingLocate.current && geo.position) {
+      pendingLocate.current = false;
+      applyLocate(geo.position);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [geo.position]);
 
   const draftPolyline = useMemo((): LatLng[] => {
     if (draft?.kind !== "segment") return [];
@@ -181,6 +222,10 @@ export default function Editor({ net }: { net: NetworkState }) {
           dansal={net.dansal}
           parking={net.parking}
           draftPolyline={draftPolyline.length >= 2 ? draftPolyline : undefined}
+          draftPoint={draftPoint}
+          onDraftMove={(lat, lng) => setDraft((d) => (d && d.kind !== "segment" ? { ...d, lat, lng } : d))}
+          userPos={geo.position}
+          focus={focus}
           overlayUrl={overlay?.url}
           overlayBounds={overlay?.bounds}
           overlayOpacity={overlay?.opacity}
@@ -193,6 +238,21 @@ export default function Editor({ net }: { net: NetworkState }) {
           onParkingClick={handleParkingClick}
         />
       </div>
+
+      {/* Locate-me FAB — drop/move the point at the admin's current GPS spot */}
+      <button
+        onClick={locateMe}
+        title={mode === "view" || mode === "segment" ? "Center on my location" : "Place the point at my current location"}
+        className="absolute bottom-5 right-4 z-10 flex items-center gap-2 rounded-full bg-navy-700 px-4 py-3 text-sm font-semibold text-white shadow-poson-lg transition-colors hover:bg-navy-800"
+      >
+        {geo.watching && !geo.position ? <Navigation className="h-4 w-4 animate-pulse" /> : <LocateFixed className="h-4 w-4" />}
+        Locate me
+      </button>
+      {geo.error === "denied" && (
+        <div className="absolute bottom-20 right-4 z-10 max-w-[220px] rounded-xl border border-red-200 bg-red-50 px-3 py-2 text-[11px] text-red-700 shadow-poson">
+          Location permission denied. Enable it in your browser to drop points where you stand.
+        </div>
+      )}
 
       {/* Hidden overlay file input */}
       <input ref={overlayInputRef} type="file" accept="image/*" hidden onChange={(e) => {
