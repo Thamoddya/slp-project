@@ -3,9 +3,14 @@ import { useTranslation } from "react-i18next";
 import { AlertTriangle, ArrowRight, Clock, Ruler, Navigation, ParkingSquare, Utensils } from "lucide-react";
 import { formatDistance, formatEta, localizedName } from "@/components/format";
 import { dansalIcon, dansalTint, dansalColor } from "@/lib/dansal";
+import { nearestOnPolyline, polylineLengthMeters } from "@/routing/geo";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import type { RouteResult as RouteResultType, NetworkState } from "@/types";
+import type { RouteResult as RouteResultType, NetworkState, Dansal, Parking } from "@/types";
+
+// A Dansal/parking point this close to the route line counts as "on the route",
+// so admins don't have to hand-assign a nearest road segment.
+const ON_ROUTE_M = 250;
 
 interface RouteResultProps {
   route: RouteResultType | null;
@@ -29,36 +34,32 @@ export default function RouteResult({
 }: RouteResultProps) {
   const { t } = useTranslation();
 
-  const segDistance = useMemo(() => {
-    const m = new Map<string, number>();
-    let acc = 0;
-    (route?.ok ? route.segments : []).forEach((s) => {
-      acc += s.lengthMeters || 0;
-      m.set(s.id, acc);
-    });
-    return m;
+  // Points are matched to the route by GEOMETRY (distance to the route line),
+  // not a hand-assigned segment id — so anything dropped on/near the route shows.
+  const onRoute = useMemo(() => {
+    const poly = route?.ok ? route.polyline : [];
+    const total = poly.length > 1 ? polylineLengthMeters(poly) : 0;
+    const place = <T extends { lat: number; lng: number }>(items: T[]): T[] => {
+      if (poly.length < 2) return [];
+      return items
+        .map((it) => {
+          const r = nearestOnPolyline({ lat: it.lat, lng: it.lng }, poly);
+          return r && r.distMeters <= ON_ROUTE_M
+            ? { it, along: total - (r.remainingToEndMeters || 0) }
+            : null;
+        })
+        .filter((x): x is { it: T; along: number } => x !== null)
+        .sort((a, b) => a.along - b.along)
+        .map((x) => x.it);
+    };
+    return place;
   }, [route]);
 
-  const routeSegIds = useMemo(
-    () => new Set((route?.ok ? route.segments : []).map((s) => s.id)),
-    [route]
-  );
+  const dansalOnRoute = useMemo<Dansal[]>(() => onRoute(net.dansal), [onRoute, net.dansal]);
 
-  const dansalOnRoute = useMemo(
-    () =>
-      net.dansal
-        .filter((d) => routeSegIds.has(d.nearestSegmentId))
-        .sort((a, b) => (segDistance.get(a.nearestSegmentId) || 0) - (segDistance.get(b.nearestSegmentId) || 0)),
-    [net.dansal, routeSegIds, segDistance]
-  );
-
-  const parkingOnRoute = useMemo(
-    () =>
-      net.parking
-        .filter((p) => routeSegIds.has(p.nearestSegmentId))
-        .filter((p) => vehicle === "all" || (p.vehicleTypes || []).includes(vehicle as never))
-        .sort((a, b) => (segDistance.get(a.nearestSegmentId) || 0) - (segDistance.get(b.nearestSegmentId) || 0)),
-    [net.parking, routeSegIds, segDistance, vehicle]
+  const parkingOnRoute = useMemo<Parking[]>(
+    () => onRoute(net.parking).filter((p) => vehicle === "all" || (p.vehicleTypes || []).includes(vehicle as never)),
+    [onRoute, net.parking, vehicle]
   );
 
   // ── Error state ──────────────────────────────────────────────────────────

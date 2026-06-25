@@ -46,9 +46,29 @@ export default function Preloader() {
       </div>
 
       {/* Footer credit */}
-      {/* <div className="absolute inset-x-0 bottom-9 text-center">
-        <p className="text-[11px] font-medium text-muted-foreground">{t("more.developedBy")}</p>
-      </div> */}
+      <div className="absolute inset-x-0 bottom-9 text-center">
+        <p className="text-[11px] font-medium text-muted-foreground">
+          Developed by{" "}
+          <a
+            href="https://thamoddya.site/"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="font-semibold text-navy-700 hover:text-navy-900"
+          >
+            Thamoddya Dissanayake
+          </a>{" "}
+          (
+          <a
+            href="https://www.facebook.com/profile.php?id=100093553135022"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-muted-foreground"
+          >
+            Texta World
+          </a>
+          )
+        </p>
+      </div>
     </div>
   );
 }

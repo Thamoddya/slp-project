@@ -165,10 +165,9 @@ export default function PublicApp() {
     const sampled = samplePoints(route.polyline, 9);
     const pts = userPos ? [{ lat: userPos.lat, lng: userPos.lng }, ...sampled] : sampled;
     const fmt = (p: LatLng) => `${p.lat.toFixed(6)},${p.lng.toFixed(6)}`;
-    const isApple = /iPhone|iPad|iPod/i.test(navigator.userAgent);
-    const url = isApple
-      ? `https://maps.apple.com/?saddr=${fmt(pts[0])}&daddr=${pts.slice(1).map(fmt).join("+to:")}&dirflg=d`
-      : `https://www.google.com/maps/dir/${pts.map(fmt).join("/")}/?travelmode=driving`;
+    // Always open Google Maps (works on every platform; opens the Google Maps
+    // app when installed, otherwise the browser), following the route waypoints.
+    const url = `https://www.google.com/maps/dir/${pts.map(fmt).join("/")}/?travelmode=driving`;
     window.open(url, "_blank", "noopener");
   };
 

@@ -105,12 +105,27 @@ export default function MoreModal({ onClose, onReport }: MoreModalProps) {
               draggable={false}
             />
           </div>
-          {/* <div>
-            <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
-              {t("more.credits")}
-            </p>
-            <p className="mt-1.5 text-sm font-bold text-navy-900">{t("more.developedBy")}</p>
-          </div> */}
+          <p className="text-[11px] font-medium text-muted-foreground">
+            Developed by{" "}
+            <a
+              href="https://thamoddya.site/"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="font-semibold text-navy-700 hover:text-navy-900"
+            >
+              Thamoddya Dissanayake
+            </a>{" "}
+            (
+            <a
+              href="https://www.facebook.com/profile.php?id=100093553135022"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-muted-foreground"
+            >
+              Texta World
+            </a>
+            )
+          </p>
         </div>
       </div>
     </div>
