@@ -191,7 +191,8 @@
       "closed": "Closed",
       "active": "Active",
       "inactive": "Off",
-      "lastChanged": "Changed {{time}}"
+      "lastChanged": "Changed {{time}}",
+      "visits": "Total app visits"
     },
     "validate": {
       "title": "Network Validation",

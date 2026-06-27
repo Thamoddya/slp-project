@@ -1,5 +1,6 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
+import { Eye } from "lucide-react";
 import repo from "@/data/repo";
 import { localizedName, timeAgo } from "@/components/format";
 import { Badge } from "@/components/ui/badge";
@@ -13,6 +14,9 @@ export default function ControlBoard({ net }: { net: NetworkState }) {
   const { t, i18n } = useTranslation();
   const lang = i18n.language;
   const [sub, setSub] = useState<Section>("segments");
+  const [visits, setVisits] = useState<number | null>(null);
+
+  useEffect(() => repo.subscribeStats((s) => setVisits(s.visits ?? 0)), []);
 
   const setSegStatus = (s: NetworkSegment, status: "open" | "closed") =>
     repo.update("segments", s.id, { status });
@@ -23,6 +27,23 @@ export default function ControlBoard({ net }: { net: NetworkState }) {
 
   return (
     <div className="flex flex-col h-full w-full">
+      {/* Visit count */}
+      <div className="shrink-0 border-b border-cream-200 bg-white px-4 py-3">
+        <div className="mx-auto flex w-full max-w-md items-center gap-3 rounded-2xl border border-navy-100 bg-navy-50 px-4 py-3">
+          <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-navy-700 text-white">
+            <Eye className="h-5 w-5" />
+          </span>
+          <div className="flex-1">
+            <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
+              {t("admin.control.visits")}
+            </p>
+            <p className="text-2xl font-black tabular-nums text-navy-900">
+              {visits === null ? "…" : visits.toLocaleString()}
+            </p>
+          </div>
+        </div>
+      </div>
+
       {/* Sub-tabs */}
       <div className="flex gap-1 px-4 py-3 bg-cream-50 border-b border-cream-200 shrink-0">
         <div className="mx-auto flex w-full max-w-md gap-1">

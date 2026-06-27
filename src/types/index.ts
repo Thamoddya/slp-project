@@ -182,6 +182,8 @@ export interface Repo {
   subscribeReports(cb: (data: unknown[]) => void): () => void;
   updateReport(id: string, partial: Record<string, unknown>): Promise<void>;
   removeReport(id: string): Promise<void>;
+  recordVisit(): Promise<void>;
+  subscribeStats(cb: (stats: { visits?: number }) => void): () => void;
   replaceAll(network: {
     nodes: NetworkNode[];
     segments: NetworkSegment[];

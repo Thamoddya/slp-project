@@ -74,6 +74,19 @@ export default function PublicApp() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  // Silently count a visit, once per browser session.
+  useEffect(() => {
+    try {
+      if (!sessionStorage.getItem("poson.visited")) {
+        sessionStorage.setItem("poson.visited", "1");
+        repo.recordVisit();
+      }
+    } catch {
+      repo.recordVisit();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   // Centre the map on the user once, the first time a fix arrives.
   useEffect(() => {
     const p = geo.position;

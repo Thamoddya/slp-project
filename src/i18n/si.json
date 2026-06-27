@@ -191,7 +191,8 @@
       "closed": "වසා ඇත",
       "active": "ක්‍රියාත්මක",
       "inactive": "අක්‍රිය",
-      "lastChanged": "වෙනස් කළේ {{time}}"
+      "lastChanged": "වෙනස් කළේ {{time}}",
+      "visits": "මුළු යෙදුම් පිවිසුම්"
     },
     "validate": {
       "title": "ජාල තහවුරු කිරීම",

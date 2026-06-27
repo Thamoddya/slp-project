@@ -12,6 +12,7 @@ import {
   getDocs,
   writeBatch,
   serverTimestamp,
+  increment,
 } from "firebase/firestore";
 
 type StoredNetwork = {
@@ -59,6 +60,7 @@ function makeLocalRepo() {
       store = load();
       (["nodes", "segments", "dansal", "parking", "config"] as const).forEach(emit);
       emitReports();
+      emitStats();
     };
   }
 
@@ -79,6 +81,13 @@ function makeLocalRepo() {
     if (channel) channel.postMessage({ ts: Date.now() });
   };
   const emitReports = () => { const r = loadReports(); reportListeners.forEach((cb) => cb(clone(r))); };
+
+  // Visit counter (silent analytics).
+  const statsListeners = new Set<(d: { visits?: number }) => void>();
+  const loadStats = (): { visits?: number } => {
+    try { return JSON.parse(localStorage.getItem("poson.stats") || "{}"); } catch { return {}; }
+  };
+  const emitStats = () => { const s = loadStats(); statsListeners.forEach((cb) => cb({ ...s })); };
 
   return {
     isLive: false as const,
@@ -151,6 +160,20 @@ function makeLocalRepo() {
     async removeReport(id: string) {
       saveReports(loadReports().filter((r) => r.id !== id));
       emitReports();
+    },
+
+    async recordVisit() {
+      const s = loadStats();
+      s.visits = (s.visits || 0) + 1;
+      localStorage.setItem("poson.stats", JSON.stringify(s));
+      if (channel) channel.postMessage({ ts: Date.now() });
+      emitStats();
+    },
+
+    subscribeStats(cb: (stats: { visits?: number }) => void) {
+      statsListeners.add(cb);
+      cb({ ...loadStats() });
+      return () => statsListeners.delete(cb);
     },
 
     async replaceAll(network: StoredNetwork) {
@@ -230,6 +253,20 @@ function makeFirebaseRepo() {
 
     async removeReport(id: string) {
       await deleteDoc(doc(db!, "reports", id));
+    },
+
+    async recordVisit() {
+      try {
+        await setDoc(doc(db!, "stats", "main"), { visits: increment(1) }, { merge: true });
+      } catch {
+        /* counter is best-effort; ignore (e.g. blocked by rules) */
+      }
+    },
+
+    subscribeStats(cb: (stats: { visits?: number }) => void) {
+      return onSnapshot(doc(db!, "stats", "main"), (snap) =>
+        cb(snap.exists() ? (snap.data() as { visits?: number }) : {})
+      );
     },
 
     async replaceAll(network: StoredNetwork) {
