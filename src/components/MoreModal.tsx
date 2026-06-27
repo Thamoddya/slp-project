@@ -104,6 +104,12 @@ export default function MoreModal({ onClose, onReport }: MoreModalProps) {
               className="h-14 object-contain"
               draggable={false}
             />
+            <img
+              src="/danidu.png"
+              alt="Texta World"
+              className="h-14 object-cover"
+              draggable={false}
+            />
           </div>
           <p className="text-[11px] font-medium text-muted-foreground">
             Developed by{" "}
