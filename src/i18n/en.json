@@ -48,6 +48,22 @@
     "poweredBy": "Powered by Texta World",
     "close": "Close"
   },
+  "request": {
+    "addDansal": "Request to add a Dansal",
+    "title": "Request a Dansal",
+    "subtitle": "Submit your Dansal details and a photo of the banner as proof. The Police will review and add it. The photo is for verification only and is not shown to the public.",
+    "name": "Dansal name",
+    "namePlaceholder": "e.g. Bodhi Food Dansala",
+    "time": "Open hours",
+    "date": "Date",
+    "contact": "Contact number",
+    "proof": "Proof photo (banner)",
+    "addProof": "Add a photo",
+    "processing": "Processing…",
+    "proofHint": "A photo of your Dansal banner/board. Visible to the Police only.",
+    "submit": "Submit request",
+    "thanks": "Thank you! Your Dansal request was sent to the Police for review."
+  },
   "home": {
     "useLocation": "Use my live location",
     "locating": "Getting your location…",
@@ -132,7 +148,18 @@
       "editor": "Map Editor",
       "control": "Live Control",
       "validate": "Validation",
-      "data": "Backup"
+      "data": "Backup",
+      "requests": "Requests"
+    },
+    "requests": {
+      "empty": "No Dansal requests yet.",
+      "noProof": "No proof",
+      "viewLocation": "View location",
+      "approve": "Approve",
+      "reject": "Reject",
+      "delete": "Delete",
+      "confirmDelete": "Delete this request?",
+      "status": { "pending": "Pending", "approved": "Approved", "rejected": "Rejected" }
     },
     "editor": {
       "title": "Map Editor",
@@ -191,7 +218,12 @@
       "importHint": "Restore from a JSON file. Roads & junctions are replaced; Dansal & parking are kept unless the file includes them.",
       "import": "Import JSON",
       "importedN": "Imported {{n}} records successfully.",
-      "importError": "Couldn't read that file. Make sure it's a valid network JSON export."
+      "importError": "Couldn't read that file. Make sure it's a valid network JSON export.",
+      "dedupeTitle": "Remove duplicates",
+      "dedupeHint": "Delete duplicate Dansal & parking that share the same name and location, keeping one of each.",
+      "dedupe": "Remove duplicate Dansal & parking",
+      "dedupeWarn": "Delete duplicate Dansal & parking (same name and location)? One of each is kept. This can't be undone.",
+      "dedupeDone": "Removed {{n}} duplicate records."
     },
     "stats": {
       "nodes": "Junctions",

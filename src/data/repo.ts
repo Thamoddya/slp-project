@@ -58,6 +58,7 @@ function makeLocalRepo() {
     channel.onmessage = () => {
       store = load();
       (["nodes", "segments", "dansal", "parking", "config"] as const).forEach(emit);
+      emitReports();
     };
   }
 
@@ -67,6 +68,17 @@ function makeLocalRepo() {
   function touchConfig() {
     store.config = { ...store.config, lastUpdated: Date.now() };
   }
+
+  // Reports / requests (stored separately, realtime to admin).
+  const reportListeners = new Set<(d: unknown[]) => void>();
+  const loadReports = (): Record<string, unknown>[] => {
+    try { return JSON.parse(localStorage.getItem("poson.reports") || "[]"); } catch { return []; }
+  };
+  const saveReports = (r: unknown[]) => {
+    localStorage.setItem("poson.reports", JSON.stringify(r));
+    if (channel) channel.postMessage({ ts: Date.now() });
+  };
+  const emitReports = () => { const r = loadReports(); reportListeners.forEach((cb) => cb(clone(r))); };
 
   return {
     isLive: false as const,
@@ -117,10 +129,28 @@ function makeLocalRepo() {
 
     async report(data: Record<string, unknown>): Promise<string> {
       const id = genId();
-      const reports = JSON.parse(localStorage.getItem("poson.reports") || "[]") as unknown[];
+      const reports = loadReports();
       reports.push({ ...data, id, createdAt: Date.now() });
-      localStorage.setItem("poson.reports", JSON.stringify(reports));
+      saveReports(reports);
+      emitReports();
       return id;
+    },
+
+    subscribeReports(cb: (data: unknown[]) => void) {
+      reportListeners.add(cb);
+      cb(clone(loadReports()));
+      return () => reportListeners.delete(cb);
+    },
+
+    async updateReport(id: string, partial: Record<string, unknown>) {
+      const reports = loadReports().map((r) => (r.id === id ? { ...r, ...partial } : r));
+      saveReports(reports);
+      emitReports();
+    },
+
+    async removeReport(id: string) {
+      saveReports(loadReports().filter((r) => r.id !== id));
+      emitReports();
     },
 
     async replaceAll(network: StoredNetwork) {
@@ -186,6 +216,20 @@ function makeFirebaseRepo() {
     async report(data: Record<string, unknown>): Promise<string> {
       const ref = await addDoc(collection(db!, "reports"), { ...data, createdAt: serverTimestamp() });
       return ref.id;
+    },
+
+    subscribeReports(cb: (data: unknown[]) => void) {
+      return onSnapshot(collection(db!, "reports"), (snap) =>
+        cb(snap.docs.map((d) => ({ id: d.id, ...d.data() })))
+      );
+    },
+
+    async updateReport(id: string, partial: Record<string, unknown>) {
+      await updateDoc(doc(db!, "reports", id), partial);
+    },
+
+    async removeReport(id: string) {
+      await deleteDoc(doc(db!, "reports", id));
     },
 
     async replaceAll(network: StoredNetwork) {

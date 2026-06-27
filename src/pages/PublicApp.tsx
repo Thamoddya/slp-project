@@ -20,6 +20,7 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import RouteResult from "./RouteResult";
 import ReportModal from "@/components/ReportModal";
+import RequestDansalModal from "@/components/RequestDansalModal";
 import type { NetworkNode, Dansal, Parking, RouteResult as RouteResultType, RouteSuccess, GeoPosition, LatLng } from "@/types";
 
 type Focus = { lat: number; lng: number; zoom?: number; nonce: number };
@@ -34,6 +35,7 @@ export default function PublicApp() {
   const [sheetIndex, setSheetIndex] = useState(1);
   const [moreOpen, setMoreOpen] = useState(false);
   const [reportOpen, setReportOpen] = useState(false);
+  const [requestOpen, setRequestOpen] = useState(false);
 
   const [destNode, setDestNode] = useState<NetworkNode | null>(null);
   const [query, setQuery] = useState("");
@@ -241,7 +243,7 @@ export default function PublicApp() {
   } else if (tab === "places") {
     sheetTitle = t("places.title");
     sheetRight = <span className="text-xs font-semibold text-muted-foreground">{t("places.count", { n: net.dansal.length })}</span>;
-    sheetBody = <PlacesList t={t} lang={lang} dansal={net.dansal} onFocus={focusOn} />;
+    sheetBody = <PlacesList t={t} lang={lang} dansal={net.dansal} onFocus={focusOn} onRequest={() => setRequestOpen(true)} />;
   } else if (tab === "parking") {
     sheetTitle = t("parkingTab.title");
     sheetRight = <span className="text-xs font-semibold text-muted-foreground">{t("parkingTab.count", { n: net.parking.length })}</span>;
@@ -330,6 +332,7 @@ export default function PublicApp() {
           }}
         />
       )}
+      {requestOpen && <RequestDansalModal onClose={() => setRequestOpen(false)} userPos={userPos} />}
     </div>
   );
 }
@@ -463,12 +466,13 @@ function Planner({ t, lang, geo, address, query, setQuery, results, destNode, pi
 // ─── Places tab ───────────────────────────────────────────────────────────────
 
 function PlacesList({
-  t, lang, dansal, onFocus,
+  t, lang, dansal, onFocus, onRequest,
 }: {
   t: ReturnType<typeof useTranslation>["t"];
   lang: string;
   dansal: Dansal[];
   onFocus: (p: LatLng) => void;
+  onRequest: () => void;
 }) {
   const [type, setType] = useState<string>("all");
   const TYPES = ["all", "food", "drink", "water", "medical", "other"] as const;
@@ -476,6 +480,15 @@ function PlacesList({
 
   return (
     <div className="pb-1">
+      {/* Request a Dansal */}
+      <button
+        onClick={onRequest}
+        className="mb-3 flex w-full items-center justify-center gap-2 rounded-2xl bg-saffron-500 px-4 py-3 text-sm font-bold text-white shadow-poson transition-colors hover:bg-saffron-600"
+      >
+        <Plus className="h-4 w-4" />
+        {t("request.addDansal")}
+      </button>
+
       <p className="mb-3 text-xs text-muted-foreground">{t("places.subtitle")}</p>
       <div className="mb-3 flex flex-wrap gap-2">
         {TYPES.map((ty) => {

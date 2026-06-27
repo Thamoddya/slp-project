@@ -63,6 +63,25 @@ export interface Parking {
   nearestSegmentId: string;
 }
 
+/** A public-submitted Dansal request, reviewed by admins. Image is proof only. */
+export interface DansalRequest {
+  id: string;
+  kind: "dansal_request";
+  name_en?: string;
+  name_si?: string;
+  openHours?: string;
+  date?: string;
+  /** Base64 data URL — proof banner, shown to admins only, never to the public. */
+  image?: string;
+  lat?: number;
+  lng?: number;
+  contact?: string;
+  status?: "pending" | "approved" | "rejected";
+  /** Set once approved → the Dansal created from this request (prevents dupes). */
+  dansalId?: string;
+  createdAt?: number | { seconds: number };
+}
+
 export interface AppConfig {
   eventName_si: string;
   eventName_en: string;
@@ -160,6 +179,9 @@ export interface Repo {
   remove(collection: Collection, id: string): Promise<void>;
   add(collection: Collection, data: Record<string, unknown>): Promise<string>;
   report(data: Record<string, unknown>): Promise<string>;
+  subscribeReports(cb: (data: unknown[]) => void): () => void;
+  updateReport(id: string, partial: Record<string, unknown>): Promise<void>;
+  removeReport(id: string): Promise<void>;
   replaceAll(network: {
     nodes: NetworkNode[];
     segments: NetworkSegment[];
