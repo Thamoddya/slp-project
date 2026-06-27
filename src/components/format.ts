@@ -17,6 +17,17 @@ export function formatEta(minutes: number, t: TFunction): string {
   return t("route.minutes", { n: Math.max(1, minutes) });
 }
 
+export function formatDate(iso: string | null | undefined, lang: string): string {
+  if (!iso) return "";
+  const d = new Date(iso);
+  if (isNaN(d.getTime())) return iso;
+  return d.toLocaleDateString(lang === "si" ? "si-LK" : "en-GB", {
+    day: "numeric",
+    month: "short",
+    year: "numeric",
+  });
+}
+
 export function timeAgo(ts: number | { seconds: number } | null | undefined, lang: string): string {
   if (!ts) return "—";
   const d = new Date(typeof ts === "object" && "seconds" in ts ? ts.seconds * 1000 : ts);

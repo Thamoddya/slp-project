@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { MapPin, Navigation, Search, X, LocateFixed, Plus, ParkingSquare } from "lucide-react";
+import { MapPin, Navigation, Search, X, LocateFixed, Plus, ParkingSquare, Calendar } from "lucide-react";
 import { dansalIcon, dansalTint, dansalColor } from "@/lib/dansal";
 import TopBar from "@/components/layout/TopBar";
 import BottomNav, { type PublicTab } from "@/components/layout/BottomNav";
@@ -14,7 +14,7 @@ import { useReverseGeocode } from "@/hooks/useReverseGeocode";
 import { planRoute } from "@/routing/router";
 import { haversineMeters } from "@/routing/geo";
 import repo from "@/data/repo";
-import { localizedName, timeAgo } from "@/components/format";
+import { localizedName, timeAgo, formatDate } from "@/components/format";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -459,6 +459,11 @@ function PlacesList({
                 <p className="text-xs text-muted-foreground">
                   {t(`dansal.type.${d.type}`)} · {t("dansal.open", { hours: d.openHours || "—" })}
                 </p>
+                {d.date && (
+                  <p className="mt-0.5 flex items-center gap-1 text-xs font-medium text-navy-700">
+                    <Calendar className="h-3 w-3 shrink-0" /> {formatDate(d.date, lang)}
+                  </p>
+                )}
               </div>
               {!d.active && <Badge variant="inactive">{t("dansal.inactive")}</Badge>}
             </button>

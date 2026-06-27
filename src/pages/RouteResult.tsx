@@ -1,7 +1,7 @@
 import { useMemo } from "react";
 import { useTranslation } from "react-i18next";
-import { AlertTriangle, ArrowRight, Clock, Ruler, Navigation, ParkingSquare, Utensils } from "lucide-react";
-import { formatDistance, formatEta, localizedName } from "@/components/format";
+import { AlertTriangle, ArrowRight, Clock, Ruler, Navigation, ParkingSquare, Utensils, Calendar } from "lucide-react";
+import { formatDistance, formatEta, localizedName, formatDate } from "@/components/format";
 import { dansalIcon, dansalTint, dansalColor } from "@/lib/dansal";
 import { nearestOnPolyline, polylineLengthMeters } from "@/routing/geo";
 import { Badge } from "@/components/ui/badge";
@@ -208,6 +208,11 @@ export default function RouteResult({
                     <p className="text-xs text-muted-foreground">
                       {t(`dansal.type.${d.type}`)} · {t("dansal.open", { hours: d.openHours || "—" })}
                     </p>
+                    {d.date && (
+                      <p className="mt-0.5 flex items-center gap-1 text-xs font-medium text-navy-700">
+                        <Calendar className="h-3 w-3 shrink-0" /> {formatDate(d.date, lang)}
+                      </p>
+                    )}
                   </div>
                   {!d.active && (
                     <Badge variant="inactive">{t("dansal.inactive")}</Badge>

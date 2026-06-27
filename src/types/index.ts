@@ -43,6 +43,8 @@ export interface Dansal {
   type: DansalType;
   active: boolean;
   openHours: string;
+  /** Date the Dansal operates, ISO "YYYY-MM-DD" (optional). */
+  date?: string;
   nearestSegmentId: string;
 }
 

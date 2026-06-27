@@ -17,7 +17,7 @@ type EditorMode = "view" | "node" | "segment" | "dansal" | "parking";
 type Draft =
   | { kind: "node"; id?: string; name_si: string; name_en: string; lat: number; lng: number; isEntryPoint: boolean; isExitPoint: boolean }
   | { kind: "segment"; id?: string; fromNodeId: string; toNodeId: string; name_si: string; name_en: string; points: LatLng[]; status?: string }
-  | { kind: "dansal"; id?: string; name_si: string; name_en: string; lat: number; lng: number; type: DansalType; active: boolean; openHours: string; nearestSegmentId: string }
+  | { kind: "dansal"; id?: string; name_si: string; name_en: string; lat: number; lng: number; type: DansalType; active: boolean; openHours: string; date?: string; nearestSegmentId: string }
   | { kind: "parking"; id?: string; name_si: string; name_en: string; lat: number; lng: number; capacity: number; status: string; vehicleTypes: VehicleType[]; nearestSegmentId: string };
 
 const MODES: { id: EditorMode; icon: React.ComponentType<{ className?: string }>; label: string; short: string; hint: string }[] = [
@@ -151,7 +151,7 @@ export default function Editor({ net }: { net: NetworkState }) {
       const p = { fromNodeId: draft.fromNodeId, toNodeId: draft.toNodeId, name_si: draft.name_si, name_en: draft.name_en, polyline: draftPolyline, lengthMeters: Math.round(polylineLengthMeters(draftPolyline)), status: draft.status || "open" };
       draft.id ? await repo.set("segments", draft.id, p) : await repo.add("segments", p);
     } else if (draft.kind === "dansal") {
-      const p = { name_si: draft.name_si, name_en: draft.name_en, lat: draft.lat, lng: draft.lng, type: draft.type, active: draft.active, openHours: draft.openHours, nearestSegmentId: draft.nearestSegmentId };
+      const p = { name_si: draft.name_si, name_en: draft.name_en, lat: draft.lat, lng: draft.lng, type: draft.type, active: draft.active, openHours: draft.openHours, date: draft.date || "", nearestSegmentId: draft.nearestSegmentId };
       draft.id ? await repo.set("dansal", draft.id, p) : await repo.add("dansal", p);
     } else if (draft.kind === "parking") {
       const p = { name_si: draft.name_si, name_en: draft.name_en, lat: draft.lat, lng: draft.lng, capacity: Number(draft.capacity), status: draft.status, vehicleTypes: draft.vehicleTypes, nearestSegmentId: draft.nearestSegmentId };
@@ -497,6 +497,9 @@ function DraftForm({ draft, setDraft, nodes, segments, lang, segLen, onSave, onD
           </FF>
           <FF label="Open hours">
             <Input value={draft.openHours} onChange={(e) => up({ openHours: e.target.value })} placeholder="6am – 10pm" />
+          </FF>
+          <FF label="Date">
+            <Input type="date" value={draft.date || ""} onChange={(e) => up({ date: e.target.value })} />
           </FF>
           <div className="flex gap-2">
             <Chip active={draft.active} onClick={() => up({ active: !draft.active })}>Active</Chip>
