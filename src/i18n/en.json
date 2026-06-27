@@ -102,6 +102,7 @@
     "title": "Parking along the route",
     "none": "No parking listed on this route.",
     "capacity": "{{n}} spaces",
+    "allVehicles": "All vehicles",
     "status": { "available": "Available", "filling": "Filling", "full": "Full" }
   },
   "vehicle": {

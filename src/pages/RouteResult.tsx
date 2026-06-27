@@ -10,7 +10,7 @@ import type { RouteResult as RouteResultType, RouteSuccess, NetworkState, Dansal
 
 // A Dansal/parking point this close to the route line counts as "on the route",
 // so admins don't have to hand-assign a nearest road segment.
-const ON_ROUTE_M = 250;
+const ON_ROUTE_M = 400;
 
 interface RouteResultProps {
   route: RouteResultType | null;
@@ -19,10 +19,8 @@ interface RouteResultProps {
   rerouted: boolean;
   showDansal: boolean;
   showParking: boolean;
-  vehicle: string;
   setShowDansal: (v: (p: boolean) => boolean) => void;
   setShowParking: (v: (p: boolean) => boolean) => void;
-  setVehicle: (v: string) => void;
   onNew: () => void;
   onReport: () => void;
   onOpenMaps?: () => void;
@@ -32,8 +30,8 @@ interface RouteResultProps {
 }
 
 export default function RouteResult({
-  route, net, lang, rerouted, showDansal, showParking, vehicle,
-  setShowDansal, setShowParking, setVehicle, onNew, onReport, onOpenMaps,
+  route, net, lang, rerouted, showDansal, showParking,
+  setShowDansal, setShowParking, onNew, onReport, onOpenMaps,
   options = [], selectedIndex = 0, onSelectRoute,
 }: RouteResultProps) {
   const { t } = useTranslation();
@@ -42,15 +40,17 @@ export default function RouteResult({
   // not a hand-assigned segment id — so anything dropped on/near the route shows.
   const onRoute = useMemo(() => {
     const poly = route?.ok ? route.polyline : [];
+    const segIds = new Set(route?.ok ? route.segments.map((s) => s.id) : []);
     const total = poly.length > 1 ? polylineLengthMeters(poly) : 0;
-    const place = <T extends { lat: number; lng: number }>(items: T[]): T[] => {
+    const place = <T extends { lat: number; lng: number; nearestSegmentId?: string }>(items: T[]): T[] => {
       if (poly.length < 2) return [];
       return items
         .map((it) => {
           const r = nearestOnPolyline({ lat: it.lat, lng: it.lng }, poly);
-          return r && r.distMeters <= ON_ROUTE_M
-            ? { it, along: total - (r.remainingToEndMeters || 0) }
-            : null;
+          const onByGeo = r ? r.distMeters <= ON_ROUTE_M : false;
+          const onBySeg = !!it.nearestSegmentId && segIds.has(it.nearestSegmentId);
+          if (!onByGeo && !onBySeg) return null;
+          return { it, along: r ? total - (r.remainingToEndMeters || 0) : 0 };
         })
         .filter((x): x is { it: T; along: number } => x !== null)
         .sort((a, b) => a.along - b.along)
@@ -61,10 +61,7 @@ export default function RouteResult({
 
   const dansalOnRoute = useMemo<Dansal[]>(() => onRoute(net.dansal), [onRoute, net.dansal]);
 
-  const parkingOnRoute = useMemo<Parking[]>(
-    () => onRoute(net.parking).filter((p) => vehicle === "all" || (p.vehicleTypes || []).includes(vehicle as never)),
-    [onRoute, net.parking, vehicle]
-  );
+  const parkingOnRoute = useMemo<Parking[]>(() => onRoute(net.parking), [onRoute, net.parking]);
 
   // ── Error state ──────────────────────────────────────────────────────────
   if (!route?.ok) {
@@ -190,15 +187,6 @@ export default function RouteResult({
           <ParkingSquare className="h-3.5 w-3.5" /> {t("filters.parking")}
         </FilterChip>
       </div>
-      {showParking && (
-        <div className="mb-3 flex flex-wrap gap-2">
-          {["all", "car", "bus", "threewheeler", "motorbike"].map((v) => (
-            <FilterChip key={v} active={vehicle === v} onClick={() => setVehicle(v)}>
-              {v === "all" ? t("filters.all") : t(`vehicle.${v}`)}
-            </FilterChip>
-          ))}
-        </div>
-      )}
 
       {/* Turn-by-turn */}
       <SectionTitle>{t("route.stepsTitle")}</SectionTitle>
@@ -276,8 +264,7 @@ export default function RouteResult({
                   <div className="min-w-0 flex-1">
                     <p className="font-semibold text-navy-900 text-sm">{localizedName(p, lang)}</p>
                     <p className="text-xs text-muted-foreground">
-                      {t("parking.capacity", { n: p.capacity })} ·{" "}
-                      {(p.vehicleTypes || []).map((v) => t(`vehicle.${v}`)).join(", ")}
+                      {t("parking.capacity", { n: p.capacity })} · {t("parking.allVehicles")}
                     </p>
                   </div>
                   <Badge variant={p.status as "available" | "filling" | "full"}>

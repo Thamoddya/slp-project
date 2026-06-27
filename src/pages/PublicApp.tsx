@@ -42,7 +42,6 @@ export default function PublicApp() {
   const [routeIndex, setRouteIndex] = useState(0);
   const [showDansal, setShowDansal] = useState(true);
   const [showParking, setShowParking] = useState(true);
-  const [vehicle, setVehicle] = useState<string>("all");
   const [online, setOnline] = useState(navigator.onLine);
   const [rerouted, setRerouted] = useState(false);
   const [focus, setFocus] = useState<Focus | null>(null);
@@ -223,8 +222,8 @@ export default function PublicApp() {
       sheetBody = (
         <RouteResult
           route={route} net={net} lang={lang} rerouted={rerouted}
-          showDansal={showDansal} showParking={showParking} vehicle={vehicle}
-          setShowDansal={setShowDansal} setShowParking={setShowParking} setVehicle={setVehicle}
+          showDansal={showDansal} showParking={showParking}
+          setShowDansal={setShowDansal} setShowParking={setShowParking}
           onNew={newRoute} onReport={() => setReportOpen(true)} onOpenMaps={openInMaps}
           options={routeOptions} selectedIndex={routeIndex} onSelectRoute={selectRoute}
         />
@@ -246,7 +245,7 @@ export default function PublicApp() {
   } else if (tab === "parking") {
     sheetTitle = t("parkingTab.title");
     sheetRight = <span className="text-xs font-semibold text-muted-foreground">{t("parkingTab.count", { n: net.parking.length })}</span>;
-    sheetBody = <ParkingList t={t} lang={lang} parking={net.parking} vehicle={vehicle} setVehicle={setVehicle} onFocus={focusOn} />;
+    sheetBody = <ParkingList t={t} lang={lang} parking={net.parking} onFocus={focusOn} />;
   }
 
   return (
@@ -280,7 +279,7 @@ export default function PublicApp() {
             route={tab === "map" ? route : null}
             nodes={net.nodes}
             dansal={net.dansal}
-            parking={net.parking.filter((p) => vehicle === "all" || (p.vehicleTypes || []).includes(vehicle as never))}
+            parking={net.parking}
             showDansal={showDansal}
             showParking={showParking}
             userPos={userPos}
@@ -534,27 +533,18 @@ function PlacesList({
 // ─── Parking tab ──────────────────────────────────────────────────────────────
 
 function ParkingList({
-  t, lang, parking, vehicle, setVehicle, onFocus,
+  t, lang, parking, onFocus,
 }: {
   t: ReturnType<typeof useTranslation>["t"];
   lang: string;
   parking: Parking[];
-  vehicle: string;
-  setVehicle: (v: string) => void;
   onFocus: (p: LatLng) => void;
 }) {
-  const list = parking.filter((p) => vehicle === "all" || (p.vehicleTypes || []).includes(vehicle as never));
+  const list = parking;
 
   return (
     <div className="pb-1">
       <p className="mb-3 text-xs text-muted-foreground">{t("parkingTab.subtitle")}</p>
-      <div className="mb-3 flex flex-wrap gap-2">
-        {["all", "car", "bus", "threewheeler", "motorbike"].map((v) => (
-          <Chip key={v} active={vehicle === v} onClick={() => setVehicle(v)}>
-            {v === "all" ? t("filters.all") : t(`vehicle.${v}`)}
-          </Chip>
-        ))}
-      </div>
 
       {list.length === 0 ? (
         <EmptyBox>{t("parkingTab.none")}</EmptyBox>
@@ -572,8 +562,7 @@ function ParkingList({
               <div className="min-w-0 flex-1">
                 <p className="truncate text-sm font-semibold text-navy-900">{localizedName(p, lang)}</p>
                 <p className="text-xs text-muted-foreground">
-                  {t("parking.capacity", { n: p.capacity })} ·{" "}
-                  {(p.vehicleTypes || []).map((v) => t(`vehicle.${v}`)).join(", ")}
+                  {t("parking.capacity", { n: p.capacity })} · {t("parking.allVehicles")}
                 </p>
               </div>
               <Badge variant={p.status as "available" | "filling" | "full"}>
