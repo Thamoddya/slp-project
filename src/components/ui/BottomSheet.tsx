@@ -102,7 +102,15 @@ export default function BottomSheet({
         {(title || headerRight) && (
           <div className="mt-2.5 flex items-center justify-between gap-3">
             <div className="min-w-0 text-[15px] font-bold text-navy-900">{title}</div>
-            <div className="shrink-0">{headerRight}</div>
+            {/* Stop drag-handling so interactive controls (e.g. buttons) stay tappable. */}
+            <div
+              className="shrink-0"
+              onPointerDown={(e) => e.stopPropagation()}
+              onPointerMove={(e) => e.stopPropagation()}
+              onPointerUp={(e) => e.stopPropagation()}
+            >
+              {headerRight}
+            </div>
           </div>
         )}
       </div>

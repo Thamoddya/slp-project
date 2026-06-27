@@ -153,6 +153,7 @@ export default function PublicApp() {
       didCenter.current = true;
       setPickingOrigin(false);
       setFocus({ lat: pt.lat, lng: pt.lng, zoom: 15, nonce: Date.now() });
+      setSheetIndex(1); // bring the sheet back up so the user can continue
       return;
     }
     let best: { n: NetworkNode; d: number } | null = null;
