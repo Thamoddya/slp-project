@@ -18,7 +18,11 @@
     "yourLocation": "Your location",
     "locating": "Finding your location…",
     "noLocation": "Location off — tap to enable",
-    "destination": "Destination"
+    "destination": "Destination",
+    "pickOnMap": "Set my location on the map",
+    "pickHint": "Tap the map to set your location",
+    "pickedOnMap": "Picked on map",
+    "cancel": "Cancel"
   },
   "places": {
     "title": "Dansal & Services",
@@ -70,6 +74,8 @@
     "viaEntry": "This stop is reached via the one-way route. Head to {{name}} first, then follow this route.",
     "newRoute": "Plan a new route",
     "openInMaps": "Open in Maps",
+    "optionsTitle": "Choose a route",
+    "optionN": "Option {{n}}",
     "via": "via"
   },
   "filters": {

@@ -11,7 +11,7 @@ import MoreModal from "@/components/MoreModal";
 import { useNetwork } from "@/hooks/useNetwork";
 import { useGeolocation } from "@/hooks/useGeolocation";
 import { useReverseGeocode } from "@/hooks/useReverseGeocode";
-import { planRoute } from "@/routing/router";
+import { planRouteOptions } from "@/routing/router";
 import { haversineMeters } from "@/routing/geo";
 import repo from "@/data/repo";
 import { localizedName, timeAgo, formatDate } from "@/components/format";
@@ -20,7 +20,7 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import RouteResult from "./RouteResult";
 import ReportModal from "@/components/ReportModal";
-import type { NetworkNode, Dansal, Parking, RouteResult as RouteResultType, GeoPosition, LatLng } from "@/types";
+import type { NetworkNode, Dansal, Parking, RouteResult as RouteResultType, RouteSuccess, GeoPosition, LatLng } from "@/types";
 
 type Focus = { lat: number; lng: number; zoom?: number; nonce: number };
 
@@ -38,12 +38,15 @@ export default function PublicApp() {
   const [destNode, setDestNode] = useState<NetworkNode | null>(null);
   const [query, setQuery] = useState("");
   const [route, setRoute] = useState<RouteResultType | null>(null);
+  const [routeOptions, setRouteOptions] = useState<RouteSuccess[]>([]);
+  const [routeIndex, setRouteIndex] = useState(0);
   const [showDansal, setShowDansal] = useState(true);
   const [showParking, setShowParking] = useState(true);
   const [vehicle, setVehicle] = useState<string>("all");
   const [online, setOnline] = useState(navigator.onLine);
   const [rerouted, setRerouted] = useState(false);
   const [focus, setFocus] = useState<Focus | null>(null);
+  const [pickingOrigin, setPickingOrigin] = useState(false);
   const lastPlanPos = useRef<GeoPosition | null>(null);
   const didCenter = useRef(false);
 
@@ -84,9 +87,22 @@ export default function PublicApp() {
   const address = useReverseGeocode(userPos);
 
   const compute = (start: GeoPosition, dest: NetworkNode) => {
-    const r = planRoute(net.nodes, net.segments, start, dest.id, { speedKmh: net.config?.avgSpeedKmh });
-    setRoute(r);
+    const { options, failure } = planRouteOptions(net.nodes, net.segments, start, dest.id, { speedKmh: net.config?.avgSpeedKmh });
+    if (options.length) {
+      setRouteOptions(options);
+      setRouteIndex(0);
+      setRoute(options[0]);
+    } else {
+      setRouteOptions([]);
+      setRoute(failure);
+    }
     lastPlanPos.current = start;
+  };
+
+  const selectRoute = (i: number) => {
+    if (!routeOptions[i]) return;
+    setRouteIndex(i);
+    setRoute(routeOptions[i]);
   };
 
   const onGo = () => {
@@ -129,6 +145,16 @@ export default function PublicApp() {
   };
 
   const onMapTap = (pt: LatLng) => {
+    // Manual location pick: set the user's start point and keep it (stop GPS
+    // so a later fix doesn't overwrite the chosen spot).
+    if (pickingOrigin) {
+      geo.stop();
+      geo.setManual({ lat: pt.lat, lng: pt.lng, accuracy: 0 });
+      didCenter.current = true;
+      setPickingOrigin(false);
+      setFocus({ lat: pt.lat, lng: pt.lng, zoom: 15, nonce: Date.now() });
+      return;
+    }
     let best: { n: NetworkNode; d: number } | null = null;
     for (const n of net.nodes) {
       const d = haversineMeters(pt, n);
@@ -136,6 +162,8 @@ export default function PublicApp() {
     }
     if (best) setDestNode(best.n);
   };
+
+  const startPickLocation = () => { setPickingOrigin(true); setSheetIndex(0); };
 
   const focusOn = (item: LatLng) => {
     setFocus({ lat: item.lat, lng: item.lng, zoom: 16, nonce: Date.now() });
@@ -154,7 +182,7 @@ export default function PublicApp() {
     setSheetIndex(next === "map" ? 1 : 1);
   };
 
-  const newRoute = () => { setRoute(null); setRerouted(false); setDestNode(null); };
+  const newRoute = () => { setRoute(null); setRouteOptions([]); setRouteIndex(0); setRerouted(false); setDestNode(null); };
 
   // Hand the found route off to the phone's map app (Apple Maps on iOS, else
   // Google Maps), passing the route's waypoints so it follows our corridor as
@@ -197,6 +225,7 @@ export default function PublicApp() {
           showDansal={showDansal} showParking={showParking} vehicle={vehicle}
           setShowDansal={setShowDansal} setShowParking={setShowParking} setVehicle={setVehicle}
           onNew={newRoute} onReport={() => setReportOpen(true)} onOpenMaps={openInMaps}
+          options={routeOptions} selectedIndex={routeIndex} onSelectRoute={selectRoute}
         />
       );
     } else {
@@ -205,6 +234,7 @@ export default function PublicApp() {
           t={t} lang={lang} geo={geo} address={address}
           query={query} setQuery={setQuery} results={results}
           destNode={destNode} pickDest={pickDest} onGo={onGo}
+          onPickOnMap={startPickLocation}
         />
       );
     }
@@ -270,6 +300,20 @@ export default function PublicApp() {
           {userPos ? <LocateFixed className="h-5 w-5" /> : <Navigation className="h-5 w-5" />}
         </button>
 
+        {/* Manual-location pick banner */}
+        {pickingOrigin && (
+          <div className="absolute inset-x-4 top-4 z-20 flex items-center gap-3 rounded-2xl border border-navy-200 bg-white px-4 py-3 shadow-poson-lg">
+            <MapPin className="h-5 w-5 shrink-0 text-navy-700" />
+            <p className="flex-1 text-sm font-semibold text-navy-900">{t("map.pickHint")}</p>
+            <button
+              onClick={() => setPickingOrigin(false)}
+              className="shrink-0 rounded-lg px-2.5 py-1 text-xs font-bold text-muted-foreground hover:bg-cream-100"
+            >
+              {t("map.cancel")}
+            </button>
+          </div>
+        )}
+
         <BottomSheet index={sheetIndex} onIndexChange={setSheetIndex} title={sheetTitle} headerRight={sheetRight}>
           {sheetBody}
         </BottomSheet>
@@ -303,22 +347,24 @@ interface PlannerProps {
   destNode: NetworkNode | null;
   pickDest: (n: NetworkNode | null) => void;
   onGo: () => void;
+  onPickOnMap: () => void;
 }
 
-function Planner({ t, lang, geo, address, query, setQuery, results, destNode, pickDest, onGo }: PlannerProps) {
+function Planner({ t, lang, geo, address, query, setQuery, results, destNode, pickDest, onGo, onPickOnMap }: PlannerProps) {
+  const manual = geo.position?.accuracy === 0;
   return (
     <div className="pb-1">
       {/* Your location */}
       <button
         onClick={geo.start}
-        className="mb-3 flex w-full items-center gap-3 rounded-2xl border border-cream-200 bg-cream-50 px-4 py-3 text-left"
+        className="mb-2 flex w-full items-center gap-3 rounded-2xl border border-cream-200 bg-cream-50 px-4 py-3 text-left"
       >
         <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-navy-700 text-white">
           <Navigation className="h-4 w-4" />
         </span>
         <div className="min-w-0 flex-1">
           <p className="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">
-            {t("map.yourLocation")}
+            {t("map.yourLocation")}{manual ? ` · ${t("map.pickedOnMap")}` : ""}
           </p>
           <p className="truncate text-sm font-semibold text-navy-900">
             {geo.position
@@ -326,6 +372,15 @@ function Planner({ t, lang, geo, address, query, setQuery, results, destNode, pi
               : geo.watching ? t("map.locating") : t("map.noLocation")}
           </p>
         </div>
+      </button>
+
+      {/* Set location on the map */}
+      <button
+        onClick={onPickOnMap}
+        className="mb-3 flex w-full items-center justify-center gap-2 rounded-xl border-2 border-navy-200 bg-white px-4 py-2.5 text-sm font-semibold text-navy-700 transition-colors hover:bg-navy-50"
+      >
+        <MapPin className="h-4 w-4" />
+        {t("map.pickOnMap")}
       </button>
 
       {geo.error === "denied" && (

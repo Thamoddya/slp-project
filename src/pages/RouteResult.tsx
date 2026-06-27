@@ -6,7 +6,7 @@ import { dansalIcon, dansalTint, dansalColor } from "@/lib/dansal";
 import { nearestOnPolyline, polylineLengthMeters } from "@/routing/geo";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import type { RouteResult as RouteResultType, NetworkState, Dansal, Parking } from "@/types";
+import type { RouteResult as RouteResultType, RouteSuccess, NetworkState, Dansal, Parking } from "@/types";
 
 // A Dansal/parking point this close to the route line counts as "on the route",
 // so admins don't have to hand-assign a nearest road segment.
@@ -26,11 +26,15 @@ interface RouteResultProps {
   onNew: () => void;
   onReport: () => void;
   onOpenMaps?: () => void;
+  options?: RouteSuccess[];
+  selectedIndex?: number;
+  onSelectRoute?: (i: number) => void;
 }
 
 export default function RouteResult({
   route, net, lang, rerouted, showDansal, showParking, vehicle,
   setShowDansal, setShowParking, setVehicle, onNew, onReport, onOpenMaps,
+  options = [], selectedIndex = 0, onSelectRoute,
 }: RouteResultProps) {
   const { t } = useTranslation();
 
@@ -98,6 +102,37 @@ export default function RouteResult({
         <div className="mb-3 flex items-center gap-2 rounded-xl bg-saffron-50 border border-saffron-200 px-3 py-2.5">
           <AlertTriangle className="h-4 w-4 shrink-0 text-saffron-600" />
           <p className="text-xs font-semibold text-saffron-800">{t("route.rerouted")}</p>
+        </div>
+      )}
+
+      {/* Route options — when the user is near more than one entry/route */}
+      {options.length > 1 && onSelectRoute && (
+        <div className="mb-3">
+          <SectionTitle>{t("route.optionsTitle")}</SectionTitle>
+          <div className="-mx-1 flex gap-2 overflow-x-auto px-1 pb-1">
+            {options.map((o, i) => {
+              const startName = localizedName(net.nodes.find((n) => n.id === o.startNodeId), lang);
+              return (
+                <button
+                  key={`${o.startNodeId}-${i}`}
+                  onClick={() => onSelectRoute(i)}
+                  className={`min-w-[140px] shrink-0 rounded-2xl border-2 px-3 py-2 text-left transition-all ${
+                    i === selectedIndex
+                      ? "border-navy-700 bg-navy-50"
+                      : "border-cream-200 bg-white hover:border-navy-200"
+                  }`}
+                >
+                  <p className="text-[10px] font-bold uppercase tracking-wide text-muted-foreground">
+                    {t("route.optionN", { n: i + 1 })}
+                  </p>
+                  <p className="truncate text-xs font-bold text-navy-900">{startName}</p>
+                  <p className="text-[11px] font-semibold text-saffron-600">
+                    {formatDistance(o.distanceMeters, t)} · {formatEta(o.etaMinutes, t)}
+                  </p>
+                </button>
+              );
+            })}
+          </div>
         </div>
       )}
 

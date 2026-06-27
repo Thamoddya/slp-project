@@ -1,4 +1,4 @@
-import type { NetworkNode, NetworkSegment, LatLng, RouteResult, DirectedGraph, GraphEdge } from "@/types";
+import type { NetworkNode, NetworkSegment, LatLng, RouteResult, RouteSuccess, RouteFailure, DirectedGraph, GraphEdge } from "@/types";
 import { buildGraph } from "./graph";
 import { haversineMeters, nearestOnPolyline, polylineLengthMeters } from "./geo";
 
@@ -104,19 +104,21 @@ export function snapToNetwork(
   return { bestSeg, bestNode };
 }
 
-export function planRoute(
+const MAX_ROUTE_OPTIONS = 3;
+
+function computeOptions(
   nodes: NetworkNode[],
   segments: NetworkSegment[],
   startPoint: LatLng,
   destNodeId: string,
   opts: { speedKmh?: number; snapThresholdMeters?: number } = {}
-): RouteResult {
+): { options: RouteSuccess[]; failure: RouteFailure | null } {
   const speedKmh = opts.speedKmh || DEFAULT_SPEED_KMH;
   const openSegments = segments.filter((s) => !s.status || s.status === "open");
   const graph = buildGraph(nodes, openSegments);
 
   if (!graph.nodes.has(destNodeId)) {
-    return { ok: false, reason: "dest-missing" };
+    return { options: [], failure: { ok: false, reason: "dest-missing" } };
   }
 
   const { bestSeg, bestNode } = snapToNetwork(startPoint, nodes, openSegments);
@@ -181,53 +183,88 @@ export function planRoute(
     return chosen;
   };
 
-  // Prefer a route from where the user actually is; otherwise route from an entry.
-  let viaEntry = false;
-  let best = pickBest(nearCandidates);
-  if (!best) {
-    best = pickBest(entryCandidates);
-    viaEntry = true;
+  const buildSuccess = (best: Chosen, viaEntry: boolean): RouteSuccess => {
+    const polyline: LatLng[] = [];
+    const pushPt = (pt: LatLng) => {
+      const last = polyline[polyline.length - 1];
+      if (!last || last.lat !== pt.lat || last.lng !== pt.lng) polyline.push(pt);
+    };
+    for (const edge of best.path.edges) for (const pt of edge.segment.polyline) pushPt(pt);
+    if (best.goal.tail) for (const pt of best.goal.tail) pushPt(pt);
+
+    const distanceMeters = best.path.distanceMeters + best.alongMeters + best.goal.alongMeters;
+    const etaMinutes = Math.round((distanceMeters / 1000 / speedKmh) * 60);
+    return {
+      ok: true,
+      startNodeId: best.nodeId,
+      destNodeId,
+      connectorMeters: Math.round(best.connector),
+      distanceMeters: Math.round(distanceMeters),
+      etaMinutes,
+      nodePath: best.path.nodePath,
+      segments: best.path.edges.map((e) => e.segment),
+      polyline,
+      snappedPoint: bestSeg?.point ?? null,
+      viaEntry,
+    };
+  };
+
+  // Build options: the route from where the user is (if on the network) first,
+  // then a route via each nearby entry as alternatives, sorted by length.
+  const ordered: { route: RouteSuccess; total: number }[] = [];
+  const nearBest = pickBest(nearCandidates);
+  if (nearBest) ordered.push({ route: buildSuccess(nearBest, false), total: nearBest.totalMeters });
+
+  const entryOpts: { route: RouteSuccess; total: number }[] = [];
+  for (const ec of entryCandidates) {
+    const b = pickBest([ec]);
+    if (b) entryOpts.push({ route: buildSuccess(b, true), total: b.totalMeters });
+  }
+  entryOpts.sort((a, b) => a.total - b.total);
+  ordered.push(...entryOpts);
+
+  // Dedupe by start node (keep the first/shortest occurrence) and cap the count.
+  const seen = new Set<string>();
+  const options: RouteSuccess[] = [];
+  for (const o of ordered) {
+    if (seen.has(o.route.startNodeId)) continue;
+    seen.add(o.route.startNodeId);
+    options.push(o.route);
+    if (options.length >= MAX_ROUTE_OPTIONS) break;
   }
 
-  if (!best) {
-    // Nothing reachable. If the user wasn't near the network at all, nudge them
-    // to an entry; otherwise the destination is genuinely unreachable.
+  if (options.length === 0) {
     const reason = nearCandidates.length === 0 && entryCandidates.length === 0
       ? "far-from-network"
       : "no-route";
     return {
-      ok: false,
-      reason,
-      entryNodeId: bestNode?.node?.id ?? null,
-      snappedPoint: bestSeg?.point ?? null,
+      options: [],
+      failure: { ok: false, reason, entryNodeId: bestNode?.node?.id ?? null, snappedPoint: bestSeg?.point ?? null },
     };
   }
 
-  const polyline: LatLng[] = [];
-  const pushPt = (pt: LatLng) => {
-    const last = polyline[polyline.length - 1];
-    if (!last || last.lat !== pt.lat || last.lng !== pt.lng) polyline.push(pt);
-  };
-  for (const edge of best.path.edges) {
-    for (const pt of edge.segment.polyline) pushPt(pt);
-  }
-  // Final approach along the road the stop sits on.
-  if (best.goal.tail) for (const pt of best.goal.tail) pushPt(pt);
+  return { options, failure: null };
+}
 
-  const distanceMeters = best.path.distanceMeters + best.alongMeters + best.goal.alongMeters;
-  const etaMinutes = Math.round((distanceMeters / 1000 / speedKmh) * 60);
+/** Single best route (backwards-compatible). */
+export function planRoute(
+  nodes: NetworkNode[],
+  segments: NetworkSegment[],
+  startPoint: LatLng,
+  destNodeId: string,
+  opts: { speedKmh?: number; snapThresholdMeters?: number } = {}
+): RouteResult {
+  const { options, failure } = computeOptions(nodes, segments, startPoint, destNodeId, opts);
+  return options[0] ?? (failure as RouteFailure);
+}
 
-  return {
-    ok: true,
-    startNodeId: best.nodeId,
-    destNodeId,
-    connectorMeters: Math.round(best.connector),
-    distanceMeters: Math.round(distanceMeters),
-    etaMinutes,
-    nodePath: best.path.nodePath,
-    segments: best.path.edges.map((e) => e.segment),
-    polyline,
-    snappedPoint: bestSeg?.point ?? null,
-    viaEntry,
-  };
+/** Up to a few alternative routes (e.g. via different nearby entry points). */
+export function planRouteOptions(
+  nodes: NetworkNode[],
+  segments: NetworkSegment[],
+  startPoint: LatLng,
+  destNodeId: string,
+  opts: { speedKmh?: number; snapThresholdMeters?: number } = {}
+): { options: RouteSuccess[]; failure: RouteFailure | null } {
+  return computeOptions(nodes, segments, startPoint, destNodeId, opts);
 }
