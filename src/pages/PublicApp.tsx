@@ -1,27 +1,47 @@
-import { useEffect, useMemo, useRef, useState } from "react";
-import { useTranslation } from "react-i18next";
-import { MapPin, Navigation, Search, X, LocateFixed, Plus, ParkingSquare, Calendar } from "lucide-react";
-import { dansalIcon, dansalTint, dansalColor } from "@/lib/dansal";
-import TopBar from "@/components/layout/TopBar";
+import { formatDate, localizedName, timeAgo } from "@/components/format";
 import BottomNav, { type PublicTab } from "@/components/layout/BottomNav";
-import BottomSheet from "@/components/ui/BottomSheet";
+import TopBar from "@/components/layout/TopBar";
 import GoogleMapView from "@/components/map/GoogleMapView";
-import Preloader from "@/components/Preloader";
 import MoreModal from "@/components/MoreModal";
-import { useNetwork } from "@/hooks/useNetwork";
-import { useGeolocation } from "@/hooks/useGeolocation";
-import { useReverseGeocode } from "@/hooks/useReverseGeocode";
-import { planRouteOptions } from "@/routing/router";
-import { haversineMeters } from "@/routing/geo";
-import repo from "@/data/repo";
-import { localizedName, timeAgo, formatDate } from "@/components/format";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Badge } from "@/components/ui/badge";
-import RouteResult from "./RouteResult";
+import PlaceDetailModal, {
+  type PlaceDetail,
+} from "@/components/PlaceDetailModal";
+import Preloader from "@/components/Preloader";
 import ReportModal from "@/components/ReportModal";
 import RequestDansalModal from "@/components/RequestDansalModal";
-import type { NetworkNode, Dansal, Parking, RouteResult as RouteResultType, RouteSuccess, GeoPosition, LatLng } from "@/types";
+import { Badge } from "@/components/ui/badge";
+import BottomSheet from "@/components/ui/BottomSheet";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import repo from "@/data/repo";
+import { useGeolocation } from "@/hooks/useGeolocation";
+import { useNetwork } from "@/hooks/useNetwork";
+import { useReverseGeocode } from "@/hooks/useReverseGeocode";
+import { dansalColor, dansalIcon, dansalTint } from "@/lib/dansal";
+import { haversineMeters } from "@/routing/geo";
+import { planRouteOptions } from "@/routing/router";
+import type {
+  Dansal,
+  GeoPosition,
+  LatLng,
+  NetworkNode,
+  Parking,
+  RouteResult as RouteResultType,
+  RouteSuccess,
+} from "@/types";
+import {
+  Calendar,
+  LocateFixed,
+  MapPin,
+  Navigation,
+  ParkingSquare,
+  Plus,
+  Search,
+  X,
+} from "lucide-react";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { useTranslation } from "react-i18next";
+import RouteResult from "./RouteResult";
 
 type Focus = { lat: number; lng: number; zoom?: number; nonce: number };
 
@@ -36,6 +56,7 @@ export default function PublicApp() {
   const [moreOpen, setMoreOpen] = useState(false);
   const [reportOpen, setReportOpen] = useState(false);
   const [requestOpen, setRequestOpen] = useState(false);
+  const [selectedPlace, setSelectedPlace] = useState<PlaceDetail | null>(null);
 
   const [destNode, setDestNode] = useState<NetworkNode | null>(null);
   const [query, setQuery] = useState("");
@@ -63,7 +84,10 @@ export default function PublicApp() {
     const off = () => setOnline(false);
     window.addEventListener("online", on);
     window.addEventListener("offline", off);
-    return () => { window.removeEventListener("online", on); window.removeEventListener("offline", off); };
+    return () => {
+      window.removeEventListener("online", on);
+      window.removeEventListener("offline", off);
+    };
   }, []);
 
   // Ask for the user's live location automatically on first load, so the map
@@ -101,7 +125,13 @@ export default function PublicApp() {
   const address = useReverseGeocode(userPos);
 
   const compute = (start: GeoPosition, dest: NetworkNode) => {
-    const { options, failure } = planRouteOptions(net.nodes, net.segments, start, dest.id, { speedKmh: net.config?.avgSpeedKmh });
+    const { options, failure } = planRouteOptions(
+      net.nodes,
+      net.segments,
+      start,
+      dest.id,
+      { speedKmh: net.config?.avgSpeedKmh },
+    );
     if (options.length) {
       setRouteOptions(options);
       setRouteIndex(0);
@@ -130,7 +160,8 @@ export default function PublicApp() {
   // Auto-reroute when the user moves far or a road on the path closes.
   useEffect(() => {
     if (!route || !destNode || !userPos) return;
-    const moved = lastPlanPos.current && haversineMeters(lastPlanPos.current, userPos) > 60;
+    const moved =
+      lastPlanPos.current && haversineMeters(lastPlanPos.current, userPos) > 60;
     const onPathClosed =
       route.ok &&
       route.segments.some((s) => {
@@ -148,7 +179,11 @@ export default function PublicApp() {
     const q = query.trim().toLowerCase();
     if (!q) return [];
     return net.nodes
-      .filter((n) => (n.name_si || "").toLowerCase().includes(q) || (n.name_en || "").toLowerCase().includes(q))
+      .filter(
+        (n) =>
+          (n.name_si || "").toLowerCase().includes(q) ||
+          (n.name_en || "").toLowerCase().includes(q),
+      )
       .slice(0, 8);
   }, [query, net.nodes]);
 
@@ -178,7 +213,10 @@ export default function PublicApp() {
     if (best) setDestNode(best.n);
   };
 
-  const startPickLocation = () => { setPickingOrigin(true); setSheetIndex(0); };
+  const startPickLocation = () => {
+    setPickingOrigin(true);
+    setSheetIndex(0);
+  };
 
   const focusOn = (item: LatLng) => {
     setFocus({ lat: item.lat, lng: item.lng, zoom: 16, nonce: Date.now() });
@@ -187,17 +225,32 @@ export default function PublicApp() {
   };
 
   const recenter = () => {
-    if (userPos) setFocus({ lat: userPos.lat, lng: userPos.lng, zoom: 15, nonce: Date.now() });
+    if (userPos)
+      setFocus({
+        lat: userPos.lat,
+        lng: userPos.lng,
+        zoom: 15,
+        nonce: Date.now(),
+      });
     else geo.start();
   };
 
   const onSelectTab = (next: PublicTab) => {
-    if (next === "more") { setMoreOpen(true); return; }
+    if (next === "more") {
+      setMoreOpen(true);
+      return;
+    }
     setTab(next);
     setSheetIndex(next === "map" ? 1 : 1);
   };
 
-  const newRoute = () => { setRoute(null); setRouteOptions([]); setRouteIndex(0); setRerouted(false); setDestNode(null); };
+  const newRoute = () => {
+    setRoute(null);
+    setRouteOptions([]);
+    setRouteIndex(0);
+    setRerouted(false);
+    setDestNode(null);
+  };
 
   // Hand the found route off to the phone's map app (Apple Maps on iOS, else
   // Google Maps), passing the route's waypoints so it follows our corridor as
@@ -206,7 +259,9 @@ export default function PublicApp() {
   const openInMaps = () => {
     if (!route?.ok || !route.polyline?.length) return;
     const sampled = samplePoints(route.polyline, 9);
-    const pts = userPos ? [{ lat: userPos.lat, lng: userPos.lng }, ...sampled] : sampled;
+    const pts = userPos
+      ? [{ lat: userPos.lat, lng: userPos.lng }, ...sampled]
+      : sampled;
     const fmt = (p: LatLng) => `${p.lat.toFixed(6)},${p.lng.toFixed(6)}`;
     // Always open Google Maps (works on every platform; opens the Google Maps
     // app when installed, otherwise the browser), following the route waypoints.
@@ -236,31 +291,76 @@ export default function PublicApp() {
       );
       sheetBody = (
         <RouteResult
-          route={route} net={net} lang={lang} rerouted={rerouted}
-          showDansal={showDansal} showParking={showParking}
-          setShowDansal={setShowDansal} setShowParking={setShowParking}
-          onNew={newRoute} onReport={() => setReportOpen(true)} onOpenMaps={openInMaps}
-          options={routeOptions} selectedIndex={routeIndex} onSelectRoute={selectRoute}
+          route={route}
+          net={net}
+          lang={lang}
+          rerouted={rerouted}
+          showDansal={showDansal}
+          showParking={showParking}
+          setShowDansal={setShowDansal}
+          setShowParking={setShowParking}
+          onNew={newRoute}
+          onReport={() => setReportOpen(true)}
+          onOpenMaps={openInMaps}
+          options={routeOptions}
+          selectedIndex={routeIndex}
+          onSelectRoute={selectRoute}
         />
       );
     } else {
       sheetBody = (
         <Planner
-          t={t} lang={lang} geo={geo} address={address}
-          query={query} setQuery={setQuery} results={results}
-          destNode={destNode} pickDest={pickDest} onGo={onGo}
+          t={t}
+          lang={lang}
+          geo={geo}
+          address={address}
+          query={query}
+          setQuery={setQuery}
+          results={results}
+          destNode={destNode}
+          pickDest={pickDest}
+          onGo={onGo}
           onPickOnMap={startPickLocation}
         />
       );
     }
   } else if (tab === "places") {
     sheetTitle = t("places.title");
-    sheetRight = <span className="text-xs font-semibold text-muted-foreground">{t("places.count", { n: net.dansal.length })}</span>;
-    sheetBody = <PlacesList t={t} lang={lang} dansal={net.dansal} onFocus={focusOn} onRequest={() => setRequestOpen(true)} />;
+    sheetRight = (
+      <span className="text-xs font-semibold text-muted-foreground">
+        {t("places.count", { n: net.dansal.length })}
+      </span>
+    );
+    sheetBody = (
+      <PlacesList
+        t={t}
+        lang={lang}
+        dansal={net.dansal}
+        onSelect={(d) => {
+          focusOn(d);
+          setSelectedPlace({ kind: "dansal", data: d });
+        }}
+        onRequest={() => setRequestOpen(true)}
+      />
+    );
   } else if (tab === "parking") {
     sheetTitle = t("parkingTab.title");
-    sheetRight = <span className="text-xs font-semibold text-muted-foreground">{t("parkingTab.count", { n: net.parking.length })}</span>;
-    sheetBody = <ParkingList t={t} lang={lang} parking={net.parking} onFocus={focusOn} />;
+    sheetRight = (
+      <span className="text-xs font-semibold text-muted-foreground">
+        {t("parkingTab.count", { n: net.parking.length })}
+      </span>
+    );
+    sheetBody = (
+      <ParkingList
+        t={t}
+        lang={lang}
+        parking={net.parking}
+        onSelect={(p) => {
+          focusOn(p);
+          setSelectedPlace({ kind: "parking", data: p });
+        }}
+      />
+    );
   }
 
   return (
@@ -279,7 +379,9 @@ export default function PublicApp() {
       {!online && (
         <div className="shrink-0 border-b border-saffron-200 bg-saffron-50 px-4 py-2 text-center">
           <p className="text-xs font-medium text-saffron-800">
-            {t("app.offlineBanner", { time: timeAgo(net.config?.lastUpdated, lang) })}
+            {t("app.offlineBanner", {
+              time: timeAgo(net.config?.lastUpdated, lang),
+            })}
           </p>
         </div>
       )}
@@ -301,6 +403,8 @@ export default function PublicApp() {
             destNode={destNode}
             onMapTap={onMapTap}
             onPickNode={pickDest}
+            onDansalTap={(d) => setSelectedPlace({ kind: "dansal", data: d })}
+            onParkingTap={(p) => setSelectedPlace({ kind: "parking", data: p })}
             fitBounds={fitBounds}
             focus={focus}
           />
@@ -312,14 +416,20 @@ export default function PublicApp() {
           aria-label={t("map.yourLocation")}
           className="absolute right-4 top-4 z-10 flex h-11 w-11 items-center justify-center rounded-full bg-white text-navy-700 shadow-poson-lg transition-colors hover:bg-cream-50"
         >
-          {userPos ? <LocateFixed className="h-5 w-5" /> : <Navigation className="h-5 w-5" />}
+          {userPos ? (
+            <LocateFixed className="h-5 w-5" />
+          ) : (
+            <Navigation className="h-5 w-5" />
+          )}
         </button>
 
         {/* Manual-location pick banner */}
         {pickingOrigin && (
           <div className="absolute inset-x-4 top-4 z-20 flex items-center gap-3 rounded-2xl border border-navy-200 bg-white px-4 py-3 shadow-poson-lg">
             <MapPin className="h-5 w-5 shrink-0 text-navy-700" />
-            <p className="flex-1 text-sm font-semibold text-navy-900">{t("map.pickHint")}</p>
+            <p className="flex-1 text-sm font-semibold text-navy-900">
+              {t("map.pickHint")}
+            </p>
             <button
               onClick={() => setPickingOrigin(false)}
               className="shrink-0 rounded-lg px-2.5 py-1 text-xs font-bold text-muted-foreground hover:bg-cream-100"
@@ -329,23 +439,50 @@ export default function PublicApp() {
           </div>
         )}
 
-        <BottomSheet index={sheetIndex} onIndexChange={setSheetIndex} title={sheetTitle} headerRight={sheetRight}>
+        <BottomSheet
+          index={sheetIndex}
+          onIndexChange={setSheetIndex}
+          title={sheetTitle}
+          headerRight={sheetRight}
+        >
           {sheetBody}
         </BottomSheet>
       </div>
 
       <BottomNav active={tab} onSelect={onSelectTab} />
 
-      {moreOpen && <MoreModal onClose={() => setMoreOpen(false)} onReport={() => setReportOpen(true)} />}
+      {moreOpen && (
+        <MoreModal
+          onClose={() => setMoreOpen(false)}
+          onReport={() => setReportOpen(true)}
+        />
+      )}
       {reportOpen && (
         <ReportModal
           onClose={() => setReportOpen(false)}
           onSubmit={async (text) => {
-            await repo.report({ text, lat: userPos?.lat, lng: userPos?.lng, destId: destNode?.id });
+            await repo.report({
+              text,
+              lat: userPos?.lat,
+              lng: userPos?.lng,
+              destId: destNode?.id,
+            });
           }}
         />
       )}
-      {requestOpen && <RequestDansalModal onClose={() => setRequestOpen(false)} userPos={userPos} />}
+      {requestOpen && (
+        <RequestDansalModal
+          onClose={() => setRequestOpen(false)}
+          userPos={userPos}
+        />
+      )}
+      {selectedPlace && (
+        <PlaceDetailModal
+          place={selectedPlace}
+          userPos={userPos}
+          onClose={() => setSelectedPlace(null)}
+        />
+      )}
     </div>
   );
 }
@@ -366,7 +503,19 @@ interface PlannerProps {
   onPickOnMap: () => void;
 }
 
-function Planner({ t, lang, geo, address, query, setQuery, results, destNode, pickDest, onGo, onPickOnMap }: PlannerProps) {
+function Planner({
+  t,
+  lang,
+  geo,
+  address,
+  query,
+  setQuery,
+  results,
+  destNode,
+  pickDest,
+  onGo,
+  onPickOnMap,
+}: PlannerProps) {
   const manual = geo.position?.accuracy === 0;
   return (
     <div className="pb-1">
@@ -380,12 +529,15 @@ function Planner({ t, lang, geo, address, query, setQuery, results, destNode, pi
         </span>
         <div className="min-w-0 flex-1">
           <p className="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">
-            {t("map.yourLocation")}{manual ? ` · ${t("map.pickedOnMap")}` : ""}
+            {t("map.yourLocation")}
+            {manual ? ` · ${t("map.pickedOnMap")}` : ""}
           </p>
           <p className="truncate text-sm font-semibold text-navy-900">
             {geo.position
-              ? (address || t("home.myLocation"))
-              : geo.watching ? t("map.locating") : t("map.noLocation")}
+              ? address || t("home.myLocation")
+              : geo.watching
+                ? t("map.locating")
+                : t("map.noLocation")}
           </p>
         </div>
       </button>
@@ -437,8 +589,12 @@ function Planner({ t, lang, geo, address, query, setQuery, results, destNode, pi
                 i < results.length - 1 ? "border-b border-cream-100" : ""
               }`}
             >
-              <span className="text-sm font-semibold text-navy-900">{localizedName(n, lang)}</span>
-              <span className="text-xs text-muted-foreground">{lang === "si" ? n.name_en : n.name_si}</span>
+              <span className="text-sm font-semibold text-navy-900">
+                {localizedName(n, lang)}
+              </span>
+              <span className="text-xs text-muted-foreground">
+                {lang === "si" ? n.name_en : n.name_si}
+              </span>
             </button>
           ))}
         </div>
@@ -449,10 +605,17 @@ function Planner({ t, lang, geo, address, query, setQuery, results, destNode, pi
         <div className="mt-3 flex items-center gap-2 rounded-xl border border-navy-200 bg-navy-50 px-4 py-3">
           <MapPin className="h-4 w-4 shrink-0 text-navy-700" />
           <div className="min-w-0 flex-1">
-            <span className="text-xs text-muted-foreground">{t("map.destination")}: </span>
-            <span className="text-sm font-semibold text-navy-900">{localizedName(destNode, lang)}</span>
+            <span className="text-xs text-muted-foreground">
+              {t("map.destination")}:{" "}
+            </span>
+            <span className="text-sm font-semibold text-navy-900">
+              {localizedName(destNode, lang)}
+            </span>
           </div>
-          <button onClick={() => pickDest(null)} className="text-muted-foreground hover:text-navy-700">
+          <button
+            onClick={() => pickDest(null)}
+            className="text-muted-foreground hover:text-navy-700"
+          >
             <X className="h-3.5 w-3.5" />
           </button>
         </div>
@@ -479,12 +642,16 @@ function Planner({ t, lang, geo, address, query, setQuery, results, destNode, pi
 // ─── Places tab ───────────────────────────────────────────────────────────────
 
 function PlacesList({
-  t, lang, dansal, onFocus, onRequest,
+  t,
+  lang,
+  dansal,
+  onSelect,
+  onRequest,
 }: {
   t: ReturnType<typeof useTranslation>["t"];
   lang: string;
   dansal: Dansal[];
-  onFocus: (p: LatLng) => void;
+  onSelect: (d: Dansal) => void;
   onRequest: () => void;
 }) {
   const [type, setType] = useState<string>("all");
@@ -502,7 +669,9 @@ function PlacesList({
         {t("request.addDansal")}
       </button>
 
-      <p className="mb-3 text-xs text-muted-foreground">{t("places.subtitle")}</p>
+      <p className="mb-3 text-xs text-muted-foreground">
+        {t("places.subtitle")}
+      </p>
       <div className="mb-3 flex flex-wrap gap-2">
         {TYPES.map((ty) => {
           const Icon = ty === "all" ? null : dansalIcon(ty);
@@ -524,30 +693,39 @@ function PlacesList({
           {list.map((d) => {
             const Icon = dansalIcon(d.type);
             return (
-            <button
-              key={d.id}
-              onClick={() => onFocus(d)}
-              className={`flex w-full items-center gap-3 rounded-2xl border border-cream-200 bg-white p-3 text-left transition-all hover:border-navy-200 hover:shadow-poson active:scale-[0.99] ${!d.active ? "opacity-50" : ""}`}
-            >
-              <div
-                className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl"
-                style={{ background: dansalTint(d.type), color: dansalColor(d.type) }}
+              <button
+                key={d.id}
+                onClick={() => onSelect(d)}
+                className={`flex w-full items-center gap-3 rounded-2xl border border-cream-200 bg-white p-3 text-left transition-all hover:border-navy-200 hover:shadow-poson active:scale-[0.99] ${!d.active ? "opacity-50" : ""}`}
               >
-                <Icon className="h-5 w-5" />
-              </div>
-              <div className="min-w-0 flex-1">
-                <p className="truncate text-sm font-semibold text-navy-900">{localizedName(d, lang)}</p>
-                <p className="text-xs text-muted-foreground">
-                  {t(`dansal.type.${d.type}`)} · {t("dansal.open", { hours: d.openHours || "—" })}
-                </p>
-                {d.date && (
-                  <p className="mt-0.5 flex items-center gap-1 text-xs font-medium text-navy-700">
-                    <Calendar className="h-3 w-3 shrink-0" /> {formatDate(d.date, lang)}
+                <div
+                  className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl"
+                  style={{
+                    background: dansalTint(d.type),
+                    color: dansalColor(d.type),
+                  }}
+                >
+                  <Icon className="h-5 w-5" />
+                </div>
+                <div className="min-w-0 flex-1">
+                  <p className="truncate text-sm font-semibold text-navy-900">
+                    {localizedName(d, lang)}
                   </p>
+                  <p className="text-xs text-muted-foreground">
+                    {t(`dansal.type.${d.type}`)} ·{" "}
+                    {t("dansal.open", { hours: d.openHours || "—" })}
+                  </p>
+                  {d.date && (
+                    <p className="mt-0.5 flex items-center gap-1 text-xs font-medium text-navy-700">
+                      <Calendar className="h-3 w-3 shrink-0" />{" "}
+                      {formatDate(d.date, lang)}
+                    </p>
+                  )}
+                </div>
+                {!d.active && (
+                  <Badge variant="inactive">{t("dansal.inactive")}</Badge>
                 )}
-              </div>
-              {!d.active && <Badge variant="inactive">{t("dansal.inactive")}</Badge>}
-            </button>
+              </button>
             );
           })}
         </div>
@@ -559,18 +737,23 @@ function PlacesList({
 // ─── Parking tab ──────────────────────────────────────────────────────────────
 
 function ParkingList({
-  t, lang, parking, onFocus,
+  t,
+  lang,
+  parking,
+  onSelect,
 }: {
   t: ReturnType<typeof useTranslation>["t"];
   lang: string;
   parking: Parking[];
-  onFocus: (p: LatLng) => void;
+  onSelect: (p: Parking) => void;
 }) {
   const list = parking;
 
   return (
     <div className="pb-1">
-      <p className="mb-3 text-xs text-muted-foreground">{t("parkingTab.subtitle")}</p>
+      <p className="mb-3 text-xs text-muted-foreground">
+        {t("parkingTab.subtitle")}
+      </p>
 
       {list.length === 0 ? (
         <EmptyBox>{t("parkingTab.none")}</EmptyBox>
@@ -579,16 +762,19 @@ function ParkingList({
           {list.map((p) => (
             <button
               key={p.id}
-              onClick={() => onFocus(p)}
+              onClick={() => onSelect(p)}
               className="flex w-full items-center gap-3 rounded-2xl border border-cream-200 bg-white p-3 text-left transition-all hover:border-navy-200 hover:shadow-poson active:scale-[0.99]"
             >
               <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-navy-50 text-navy-700">
                 <ParkingSquare className="h-5 w-5" />
               </div>
               <div className="min-w-0 flex-1">
-                <p className="truncate text-sm font-semibold text-navy-900">{localizedName(p, lang)}</p>
+                <p className="truncate text-sm font-semibold text-navy-900">
+                  {localizedName(p, lang)}
+                </p>
                 <p className="text-xs text-muted-foreground">
-                  {t("parking.capacity", { n: p.capacity })} · {t("parking.allVehicles")}
+                  {t("parking.capacity", { n: p.capacity })} ·{" "}
+                  {t("parking.allVehicles")}
                 </p>
               </div>
               <Badge variant={p.status as "available" | "filling" | "full"}>
@@ -604,12 +790,22 @@ function ParkingList({
 
 // ─── Small shared bits ────────────────────────────────────────────────────────
 
-function Chip({ active, onClick, children }: { active: boolean; onClick: () => void; children: React.ReactNode }) {
+function Chip({
+  active,
+  onClick,
+  children,
+}: {
+  active: boolean;
+  onClick: () => void;
+  children: React.ReactNode;
+}) {
   return (
     <button
       onClick={onClick}
       className={`rounded-full border-2 px-3.5 py-1.5 text-xs font-semibold transition-all ${
-        active ? "border-navy-700 bg-navy-700 text-white" : "border-cream-200 bg-white text-muted-foreground hover:border-navy-200"
+        active
+          ? "border-navy-700 bg-navy-700 text-white"
+          : "border-cream-200 bg-white text-muted-foreground hover:border-navy-200"
       }`}
     >
       {children}

@@ -124,6 +124,13 @@
     "allVehicles": "සියලු වාහන",
     "status": { "available": "ඇත", "filling": "පිරෙමින්", "full": "පිරී ඇත" }
   },
+  "place": {
+    "unknown": "නම් නොමැති ස්ථානය",
+    "openHours": "විවෘත වේලාව",
+    "capacity": "ප්‍රමාණය",
+    "vehicles": "වාහන",
+    "coords": "නිර්දේශාංක"
+  },
   "vehicle": {
     "car": "කාර්",
     "bus": "බස්",

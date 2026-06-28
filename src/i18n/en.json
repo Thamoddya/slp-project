@@ -124,6 +124,13 @@
     "allVehicles": "All vehicles",
     "status": { "available": "Available", "filling": "Filling", "full": "Full" }
   },
+  "place": {
+    "unknown": "Unnamed place",
+    "openHours": "Open hours",
+    "capacity": "Capacity",
+    "vehicles": "Vehicles",
+    "coords": "Coordinates"
+  },
   "vehicle": {
     "car": "Car",
     "bus": "Bus",

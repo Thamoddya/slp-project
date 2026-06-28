@@ -1,15 +1,22 @@
 /// <reference types="@types/google.maps" />
-import { useEffect, useRef } from "react";
+import { POSON_MAP_STYLE } from "@/lib/constants";
+import { sampleArrowPoints } from "@/routing/geo";
+import type {
+  Dansal,
+  LatLng,
+  NetworkNode,
+  NetworkSegment,
+  Parking,
+  RouteResult,
+} from "@/types";
 import {
+  AdvancedMarker,
   APIProvider,
   Map,
-  AdvancedMarker,
   Polyline,
   useMap,
 } from "@vis.gl/react-google-maps";
-import type { NetworkNode, NetworkSegment, Dansal, Parking, LatLng, RouteResult } from "@/types";
-import { POSON_MAP_STYLE } from "@/lib/constants";
-import { sampleArrowPoints } from "@/routing/geo";
+import { useEffect, useRef } from "react";
 
 // ─── Marker HTML factories ───────────────────────────────────────────────────
 // Clean white SVG glyphs inside coloured tear-drop pins (no emoji) for a
@@ -20,7 +27,11 @@ const svg = (inner: string, size = 16): string =>
 
 // category → strong pin colour + white glyph
 const DANSAL_COLOR: Record<string, string> = {
-  food: "#e8590c", drink: "#2563eb", water: "#0891b2", medical: "#dc2626", other: "#d97706",
+  food: "#e8590c",
+  drink: "#2563eb",
+  water: "#0891b2",
+  medical: "#dc2626",
+  other: "#d97706",
 };
 const GLYPH: Record<string, string> = {
   food: `<path d="M3 11 A9 9 0 0 0 21 11 Z" fill="#fff"/><path d="M2.5 11 H21.5" stroke="#fff" stroke-width="2" stroke-linecap="round"/>`,
@@ -47,16 +58,28 @@ function pinShell(bg: string, inner: string, size = 32): string {
 
 function nodePin(n: NetworkNode): string {
   const bg = n.isEntryPoint ? "#16a34a" : n.isExitPoint ? "#dc2626" : "#1b3a72";
-  const g = n.isEntryPoint ? NODE_GLYPH.entry : n.isExitPoint ? NODE_GLYPH.exit : NODE_GLYPH.plain;
+  const g = n.isEntryPoint
+    ? NODE_GLYPH.entry
+    : n.isExitPoint
+      ? NODE_GLYPH.exit
+      : NODE_GLYPH.plain;
   return pinShell(bg, svg(g, 15), 30);
 }
 
 function dansalPin(type: string): string {
-  return pinShell(DANSAL_COLOR[type] || "#d97706", svg(GLYPH[type] || GLYPH.other, 17), 34);
+  return pinShell(
+    DANSAL_COLOR[type] || "#d97706",
+    svg(GLYPH[type] || GLYPH.other, 17),
+    34,
+  );
 }
 
 function parkingPin(status: string): string {
-  const COLOR: Record<string, string> = { available: "#16a34a", filling: "#d97706", full: "#dc2626" };
+  const COLOR: Record<string, string> = {
+    available: "#16a34a",
+    filling: "#d97706",
+    full: "#dc2626",
+  };
   const inner = `<span style="font:900 13px/1 Inter,system-ui,sans-serif;color:#fff;">P</span>`;
   return pinShell(COLOR[status] || "#1b3a72", inner, 30);
 }
@@ -102,6 +125,10 @@ interface MapInnerProps {
   destNode: NetworkNode | null;
   onMapTap?: (pt: LatLng) => void;
   onPickNode?: (node: NetworkNode) => void;
+  /** Called when a Dansal pin is tapped — opens the place detail popup. */
+  onDansalTap?: (d: Dansal) => void;
+  /** Called when a Parking pin is tapped — opens the place detail popup. */
+  onParkingTap?: (p: Parking) => void;
   fitBounds?: [number, number][] | null;
   /** Pan/zoom the map to a point; bump `nonce` to re-trigger. */
   focus?: { lat: number; lng: number; zoom?: number; nonce: number } | null;
@@ -121,6 +148,8 @@ function MapInner({
   destNode,
   onMapTap,
   onPickNode,
+  onDansalTap,
+  onParkingTap,
   fitBounds,
   focus,
 }: MapInnerProps) {
@@ -142,7 +171,8 @@ function MapInner({
 
   const routeOk = route?.ok ? route : null;
   const routePolyline = routeOk?.polyline ?? [];
-  const arrows = routePolyline.length > 1 ? sampleArrowPoints(routePolyline, 120) : [];
+  const arrows =
+    routePolyline.length > 1 ? sampleArrowPoints(routePolyline, 120) : [];
 
   return (
     <Map
@@ -175,34 +205,74 @@ function MapInner({
 
       {routePolyline.length > 1 && (
         <>
-          <Polyline path={routePolyline} strokeColor="rgba(220,38,38,0.25)" strokeWeight={14} strokeOpacity={1} />
-          <Polyline path={routePolyline} strokeColor="#dc2626" strokeWeight={7} strokeOpacity={0.95} />
+          <Polyline
+            path={routePolyline}
+            strokeColor="rgba(220,38,38,0.25)"
+            strokeWeight={14}
+            strokeOpacity={1}
+          />
+          <Polyline
+            path={routePolyline}
+            strokeColor="#dc2626"
+            strokeWeight={7}
+            strokeOpacity={0.95}
+          />
         </>
       )}
 
       {arrows.map((a, i) => (
         <AdvancedMarker key={`ra-${i}`} position={{ lat: a.lat, lng: a.lng }}>
-          <div style={{ transform: `rotate(${a.bearing}deg)`, color: "#dc2626", fontSize: "14px", fontWeight: 900, lineHeight: 1, textShadow: "0 0 3px #fff", pointerEvents: "none" }}>▲</div>
+          <div
+            style={{
+              transform: `rotate(${a.bearing}deg)`,
+              color: "#dc2626",
+              fontSize: "14px",
+              fontWeight: 900,
+              lineHeight: 1,
+              textShadow: "0 0 3px #fff",
+              pointerEvents: "none",
+            }}
+          >
+            ▲
+          </div>
         </AdvancedMarker>
       ))}
 
-      {nodes.filter((n) => n.isEntryPoint || n.isExitPoint).map((n) => (
-        <AdvancedMarker key={n.id} position={{ lat: n.lat, lng: n.lng }} onClick={() => onPickNode?.(n)}>
-          <div dangerouslySetInnerHTML={{ __html: nodePin(n) }} />
-        </AdvancedMarker>
-      ))}
+      {nodes
+        .filter((n) => n.isEntryPoint || n.isExitPoint)
+        .map((n) => (
+          <AdvancedMarker
+            key={n.id}
+            position={{ lat: n.lat, lng: n.lng }}
+            onClick={() => onPickNode?.(n)}
+          >
+            <div dangerouslySetInnerHTML={{ __html: nodePin(n) }} />
+          </AdvancedMarker>
+        ))}
 
-      {showDansal && dansal.filter((d) => d.active).map((d) => (
-        <AdvancedMarker key={d.id} position={{ lat: d.lat, lng: d.lng }}>
-          <div dangerouslySetInnerHTML={{ __html: dansalPin(d.type) }} />
-        </AdvancedMarker>
-      ))}
+      {showDansal &&
+        dansal
+          .filter((d) => d.active)
+          .map((d) => (
+            <AdvancedMarker
+              key={d.id}
+              position={{ lat: d.lat, lng: d.lng }}
+              onClick={onDansalTap ? () => onDansalTap(d) : undefined}
+            >
+              <div dangerouslySetInnerHTML={{ __html: dansalPin(d.type) }} />
+            </AdvancedMarker>
+          ))}
 
-      {showParking && parking.map((p) => (
-        <AdvancedMarker key={p.id} position={{ lat: p.lat, lng: p.lng }}>
-          <div dangerouslySetInnerHTML={{ __html: parkingPin(p.status) }} />
-        </AdvancedMarker>
-      ))}
+      {showParking &&
+        parking.map((p) => (
+          <AdvancedMarker
+            key={p.id}
+            position={{ lat: p.lat, lng: p.lng }}
+            onClick={onParkingTap ? () => onParkingTap(p) : undefined}
+          >
+            <div dangerouslySetInnerHTML={{ __html: parkingPin(p.status) }} />
+          </AdvancedMarker>
+        ))}
 
       {destNode && (
         <AdvancedMarker position={{ lat: destNode.lat, lng: destNode.lng }}>
@@ -229,9 +299,15 @@ export default function GoogleMapView(props: GoogleMapViewProps) {
     return (
       <div className="flex h-full w-full flex-col items-center justify-center bg-cream-100 gap-3 p-6">
         <div className="text-4xl">🗺️</div>
-        <p className="text-center text-sm font-semibold text-navy-700">Google Maps API key required</p>
+        <p className="text-center text-sm font-semibold text-navy-700">
+          Google Maps API key required
+        </p>
         <p className="text-center text-xs text-muted-foreground">
-          Set <code className="rounded bg-cream-200 px-1 py-0.5">VITE_GOOGLE_MAPS_API_KEY</code> in{" "}
+          Set{" "}
+          <code className="rounded bg-cream-200 px-1 py-0.5">
+            VITE_GOOGLE_MAPS_API_KEY
+          </code>{" "}
+          in{" "}
           <code className="rounded bg-cream-200 px-1 py-0.5">.env.local</code>
         </p>
       </div>
@@ -304,11 +380,18 @@ function AdminMapContent({
     if (overlayUrl && overlayBounds) {
       overlayRef.current = new window.google.maps.GroundOverlay(
         overlayUrl,
-        { north: overlayBounds[1][0], south: overlayBounds[0][0], east: overlayBounds[1][1], west: overlayBounds[0][1] },
-        { opacity: overlayOpacity, map }
+        {
+          north: overlayBounds[1][0],
+          south: overlayBounds[0][0],
+          east: overlayBounds[1][1],
+          west: overlayBounds[0][1],
+        },
+        { opacity: overlayOpacity, map },
       );
     }
-    return () => { overlayRef.current?.setMap(null); };
+    return () => {
+      overlayRef.current?.setMap(null);
+    };
   }, [map, overlayUrl, overlayBounds, overlayOpacity]);
 
   useEffect(() => {
@@ -339,15 +422,33 @@ function AdminMapContent({
       {/* Direction arrows */}
       {segments.flatMap((s) =>
         sampleArrowPoints(s.polyline || [], 260).map((a, i) => (
-          <AdvancedMarker key={`${s.id}a${i}`} position={{ lat: a.lat, lng: a.lng }}>
-            <div style={{ transform: `rotate(${a.bearing}deg)`, color: s.status === "closed" ? "#9aa3b8" : "#5a78c8", fontSize: "12px", fontWeight: 900, pointerEvents: "none" }}>▲</div>
+          <AdvancedMarker
+            key={`${s.id}a${i}`}
+            position={{ lat: a.lat, lng: a.lng }}
+          >
+            <div
+              style={{
+                transform: `rotate(${a.bearing}deg)`,
+                color: s.status === "closed" ? "#9aa3b8" : "#5a78c8",
+                fontSize: "12px",
+                fontWeight: 900,
+                pointerEvents: "none",
+              }}
+            >
+              ▲
+            </div>
           </AdvancedMarker>
-        ))
+        )),
       )}
 
       {/* Draft segment preview */}
       {draftPolyline && draftPolyline.length >= 2 && (
-        <Polyline path={draftPolyline} strokeColor="#dc2626" strokeWeight={6} strokeOpacity={0.85} />
+        <Polyline
+          path={draftPolyline}
+          strokeColor="#dc2626"
+          strokeWeight={6}
+          strokeOpacity={0.85}
+        />
       )}
 
       {/* Nodes */}
@@ -368,14 +469,22 @@ function AdminMapContent({
 
       {/* Dansal */}
       {dansal.map((d) => (
-        <AdvancedMarker key={d.id} position={{ lat: d.lat, lng: d.lng }} onClick={() => onDansalClick(d)}>
+        <AdvancedMarker
+          key={d.id}
+          position={{ lat: d.lat, lng: d.lng }}
+          onClick={() => onDansalClick(d)}
+        >
           <div dangerouslySetInnerHTML={{ __html: dansalPin(d.type) }} />
         </AdvancedMarker>
       ))}
 
       {/* Parking */}
       {parking.map((p) => (
-        <AdvancedMarker key={p.id} position={{ lat: p.lat, lng: p.lng }} onClick={() => onParkingClick(p)}>
+        <AdvancedMarker
+          key={p.id}
+          position={{ lat: p.lat, lng: p.lng }}
+          onClick={() => onParkingClick(p)}
+        >
           <div dangerouslySetInnerHTML={{ __html: parkingPin(p.status) }} />
         </AdvancedMarker>
       ))}
@@ -404,13 +513,20 @@ function AdminMapContent({
   );
 }
 
-export function AdminMapView({ center, zoom, onMapClick, ...rest }: AdminMapViewProps) {
+export function AdminMapView({
+  center,
+  zoom,
+  onMapClick,
+  ...rest
+}: AdminMapViewProps) {
   const apiKey = import.meta.env.VITE_GOOGLE_MAPS_API_KEY as string | undefined;
   if (!apiKey) {
     return (
       <div className="flex h-full w-full flex-col items-center justify-center bg-cream-100 gap-4">
         <div className="text-4xl">🗺️</div>
-        <p className="text-sm font-semibold text-navy-700">Set VITE_GOOGLE_MAPS_API_KEY in .env.local</p>
+        <p className="text-sm font-semibold text-navy-700">
+          Set VITE_GOOGLE_MAPS_API_KEY in .env.local
+        </p>
       </div>
     );
   }
