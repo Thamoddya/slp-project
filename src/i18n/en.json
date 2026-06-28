@@ -3,7 +3,10 @@
     "title": "Poson Route Guidance",
     "subtitle": "Anuradhapura · Sri Lanka Police",
     "offlineBanner": "Offline — data may be outdated. Last updated {{time}}.",
-    "loading": "Loading map and road network…"
+    "loading": "Loading map and road network…",
+    "posonTag": "Poson Poya",
+    "posonGreetingTitle": "Happy Poson Poya",
+    "posonGreetingSub": "May the full moon light your pilgrimage"
   },
   "lang": { "toggle": "සිංහල", "current": "English" },
   "nav": {
@@ -159,7 +162,11 @@
       "reject": "Reject",
       "delete": "Delete",
       "confirmDelete": "Delete this request?",
-      "status": { "pending": "Pending", "approved": "Approved", "rejected": "Rejected" }
+      "status": {
+        "pending": "Pending",
+        "approved": "Approved",
+        "rejected": "Rejected"
+      }
     },
     "editor": {
       "title": "Map Editor",

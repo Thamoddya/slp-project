@@ -39,6 +39,32 @@ export default function MoreModal({ onClose, onReport }: MoreModalProps) {
           <X className="h-4 w-4" />
         </button>
 
+        {/* Poson Poya greeting banner */}
+        <div className="relative mb-5 overflow-hidden rounded-2xl border border-saffron-200 bg-gradient-to-br from-saffron-50 via-white to-cream-50 px-4 py-3.5">
+          <span
+            aria-hidden
+            className="pointer-events-none absolute -right-6 -top-6 h-24 w-24 rounded-full bg-saffron-200/50 blur-2xl"
+          />
+          <div className="relative flex items-center gap-3">
+            <span
+              aria-hidden
+              className="poson-moon-dot poson-moon-pulse shrink-0"
+            />
+            <div className="min-w-0 flex-1">
+              <p className="truncate text-[15px] font-extrabold tracking-tight text-navy-900">
+                {t("app.posonGreetingTitle")}
+              </p>
+              <p className="truncate text-[11px] font-medium text-navy-700/80">
+                {t("app.posonGreetingSub")}
+              </p>
+            </div>
+          </div>
+          <span
+            aria-hidden
+            className="poson-flag-strip absolute inset-x-3 bottom-0 h-[2px] rounded-full opacity-80"
+          />
+        </div>
+
         <h2 className="mb-4 text-lg font-bold text-navy-900">
           {t("more.title")}
         </h2>

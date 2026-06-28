@@ -34,6 +34,15 @@ export default function Preloader() {
           </div>
         </div>
 
+        {/* Poson Poya chip */}
+        <span className="inline-flex items-center gap-1.5 rounded-full border border-saffron-200 bg-saffron-50 px-3 py-1 text-[10px] font-bold uppercase tracking-[0.18em] text-saffron-700">
+          <span
+            aria-hidden
+            className="poson-moon-dot poson-moon-dot--sm poson-moon-pulse"
+          />
+          {t("app.posonTag")}
+        </span>
+
         {/* Title */}
         <h1 className="text-[19px] font-black tracking-tight text-navy-900 text-center">
           {t("app.title")}

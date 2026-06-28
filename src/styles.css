@@ -33,7 +33,9 @@
   * {
     @apply border-border box-border;
   }
-  html, body, #root {
+  html,
+  body,
+  #root {
     height: 100%;
     margin: 0;
   }
@@ -47,10 +49,15 @@
   html[lang="si"] body {
     font-family: "Noto Sans Sinhala", "Inter", system-ui, sans-serif;
   }
-  button, input, textarea, select {
+  button,
+  input,
+  textarea,
+  select {
     font-family: inherit;
   }
-  input, textarea, select {
+  input,
+  textarea,
+  select {
     font-size: 16px;
   }
 }
@@ -73,7 +80,7 @@
 
   .sheet-scroll {
     scrollbar-width: thin;
-    scrollbar-color: theme('colors.cream.300') transparent;
+    scrollbar-color: theme("colors.cream.300") transparent;
   }
   .sheet-scroll::-webkit-scrollbar {
     width: 4px;
@@ -92,50 +99,205 @@
 
 /* ─── Preloader animations (Poson-poya feel, smooth) ─────────────────────── */
 @keyframes preloader-slide {
-  0%   { transform: translateX(-120%); }
-  100% { transform: translateX(260%); }
+  0% {
+    transform: translateX(-120%);
+  }
+  100% {
+    transform: translateX(260%);
+  }
 }
-.preloader-bar { animation: preloader-slide 1.2s cubic-bezier(0.4, 0, 0.2, 1) infinite; }
+.preloader-bar {
+  animation: preloader-slide 1.2s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+}
 
-@keyframes preloader-fadein { from { opacity: 0; } to { opacity: 1; } }
-.preloader-fade { animation: preloader-fadein 0.5s ease-out both; }
+@keyframes preloader-fadein {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+.preloader-fade {
+  animation: preloader-fadein 0.5s ease-out both;
+}
 
 .preloader-glow {
   background:
-    radial-gradient(60% 50% at 50% 36%, rgba(245, 158, 11, 0.12), transparent 70%),
-    radial-gradient(42% 32% at 50% 36%, rgba(27, 58, 114, 0.06), transparent 72%);
+    radial-gradient(
+      60% 50% at 50% 36%,
+      rgba(245, 158, 11, 0.12),
+      transparent 70%
+    ),
+    radial-gradient(
+      42% 32% at 50% 36%,
+      rgba(27, 58, 114, 0.06),
+      transparent 72%
+    );
   animation: preloader-glowpulse 4s ease-in-out infinite;
 }
-@keyframes preloader-glowpulse { 0%, 100% { opacity: 0.65; } 50% { opacity: 1; } }
+@keyframes preloader-glowpulse {
+  0%,
+  100% {
+    opacity: 0.65;
+  }
+  50% {
+    opacity: 1;
+  }
+}
 
-@keyframes preloader-floaty { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-6px); } }
-.preloader-float { animation: preloader-floaty 3s ease-in-out infinite; }
+@keyframes preloader-floaty {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-6px);
+  }
+}
+.preloader-float {
+  animation: preloader-floaty 3s ease-in-out infinite;
+}
 
 @keyframes preloader-breathe {
-  0%, 100% { transform: scale(0.94); opacity: 0.5; }
-  50%      { transform: scale(1.06); opacity: 0.85; }
+  0%,
+  100% {
+    transform: scale(0.94);
+    opacity: 0.5;
+  }
+  50% {
+    transform: scale(1.06);
+    opacity: 0.85;
+  }
 }
-.preloader-breathe { animation: preloader-breathe 3.4s ease-in-out infinite; }
+.preloader-breathe {
+  animation: preloader-breathe 3.4s ease-in-out infinite;
+}
 
 @keyframes preloader-ringpulse {
-  0%   { transform: scale(0.9); opacity: 0.8; }
-  70%  { opacity: 0; }
-  100% { transform: scale(1.55); opacity: 0; }
+  0% {
+    transform: scale(0.9);
+    opacity: 0.8;
+  }
+  70% {
+    opacity: 0;
+  }
+  100% {
+    transform: scale(1.55);
+    opacity: 0;
+  }
 }
-.preloader-ring { animation: preloader-ringpulse 2.6s ease-out infinite; }
+.preloader-ring {
+  animation: preloader-ringpulse 2.6s ease-out infinite;
+}
 
 @media (prefers-reduced-motion: reduce) {
-  .preloader-bar, .preloader-glow, .preloader-float, .preloader-breathe, .preloader-ring {
+  .preloader-bar,
+  .preloader-glow,
+  .preloader-float,
+  .preloader-breathe,
+  .preloader-ring {
+    animation: none;
+  }
+}
+
+/* ─── Poson-poya chrome accents (used on TopBar, BottomNav, modals) ──────── */
+/* Buddhist flag 5-stripe — slim, used as a top/bottom hairline accent. */
+.poson-flag-strip {
+  background-image: linear-gradient(
+    to right,
+    #0039a6 0 20%,
+    #ffd700 20% 40%,
+    #ff0000 40% 60%,
+    #ffffff 60% 80%,
+    #ff7f00 80% 100%
+  );
+}
+
+/* Tiny full-moon dot with a warm saffron halo. */
+.poson-moon-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 9999px;
+  background: radial-gradient(
+    circle at 35% 35%,
+    #fffbe8 0%,
+    #fde68a 55%,
+    #fbbf24 100%
+  );
+  box-shadow:
+    0 0 0 2px rgba(255, 220, 100, 0.18),
+    0 0 10px 2px rgba(251, 191, 36, 0.55);
+  display: inline-block;
+}
+.poson-moon-dot--sm {
+  width: 7px;
+  height: 7px;
+  box-shadow:
+    0 0 0 1px rgba(255, 220, 100, 0.18),
+    0 0 6px 1.5px rgba(251, 191, 36, 0.55);
+}
+
+/* Soft saffron lantern glow behind active bottom-nav tab. */
+.poson-active-glow {
+  background: radial-gradient(
+    60% 70% at 50% 50%,
+    rgba(251, 191, 36, 0.28) 0%,
+    rgba(251, 191, 36, 0.08) 60%,
+    transparent 75%
+  );
+}
+
+/* Gentle vertical bob — used on TopBar's little lantern dot. */
+@keyframes poson-bob {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-2px);
+  }
+}
+.poson-bob {
+  animation: poson-bob 3.2s ease-in-out infinite;
+}
+
+/* Subtle pulsing moon glow — used on Preloader & greeting banner. */
+@keyframes poson-moonbreathe {
+  0%,
+  100% {
+    box-shadow:
+      0 0 0 2px rgba(255, 220, 100, 0.18),
+      0 0 10px 2px rgba(251, 191, 36, 0.55);
+  }
+  50% {
+    box-shadow:
+      0 0 0 3px rgba(255, 220, 100, 0.22),
+      0 0 14px 4px rgba(251, 191, 36, 0.75);
+  }
+}
+.poson-moon-pulse {
+  animation: poson-moonbreathe 3.4s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .poson-bob,
+  .poson-moon-pulse {
     animation: none;
   }
 }
 
 /* ─── Global smoothness ──────────────────────────────────────────────────── */
-button, a, [role="button"] {
+button,
+a,
+[role="button"] {
   -webkit-tap-highlight-color: transparent;
 }
 /* Smooth, momentum scrolling inside sheets & panels */
-.sheet-scroll, .overflow-y-auto { -webkit-overflow-scrolling: touch; }
+.sheet-scroll,
+.overflow-y-auto {
+  -webkit-overflow-scrolling: touch;
+}
 
 /* ─── Google Maps overrides ──────────────────────────────────────────────── */
 .gm-style .gm-style-cc,
