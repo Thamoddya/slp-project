@@ -1,5 +1,12 @@
 import { useEffect, useRef } from "react";
 
+interface PosonWaitingProps {
+  /** Show an Enter CTA at the bottom that triggers the curtain reveal. */
+  onEnter?: () => void;
+  /** Skip the random canvas particle layer — keeps two stacked instances perfectly identical at the seam. */
+  hideCanvasParticles?: boolean;
+}
+
 // ─── Floating lantern data ────────────────────────────────────────────────────
 const LANTERNS = [
   { left: "8%", delay: "0s", dur: "14s", scale: 1.1, hue: 30 },
@@ -30,11 +37,15 @@ const STARS = generateStars();
 // ─── Buddhist flag stripe colors ──────────────────────────────────────────────
 const FLAG_COLORS = ["#0039A6", "#FFD700", "#FF0000", "#FFFFFF", "#FF7F00"];
 
-export default function PosonWaiting() {
+export default function PosonWaiting({
+  onEnter,
+  hideCanvasParticles,
+}: PosonWaitingProps = {}) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
   // subtle particles on canvas
   useEffect(() => {
+    if (hideCanvasParticles) return;
     const canvas = canvasRef.current;
     if (!canvas) return;
     const ctx = canvas.getContext("2d");
@@ -89,12 +100,12 @@ export default function PosonWaiting() {
       cancelAnimationFrame(raf);
       window.removeEventListener("resize", resize);
     };
-  }, []);
+  }, [hideCanvasParticles]);
 
   return (
     <div style={styles.root}>
       {/* canvas particle layer */}
-      <canvas ref={canvasRef} style={styles.canvas} />
+      {!hideCanvasParticles && <canvas ref={canvasRef} style={styles.canvas} />}
 
       {/* star field */}
       <svg
@@ -279,6 +290,22 @@ export default function PosonWaiting() {
           <span style={styles.badgeDot} />
           <span style={styles.badgeText}>Stay Tuned</span>
         </div>
+
+        {onEnter && (
+          <button
+            type="button"
+            onClick={onEnter}
+            style={styles.enterBtn}
+            className="poson-enter-btn"
+            aria-label="Enter the pilgrim route guide"
+          >
+            <span style={styles.enterBtnGlow} aria-hidden />
+            <span style={styles.enterBtnLabel}>පිවිසෙන්න · Enter</span>
+            <span style={styles.enterBtnArrow} aria-hidden>
+              →
+            </span>
+          </button>
+        )}
       </div>
 
       {/* lotus row — REMOVED (clipped into stupa at bottom) */}
@@ -576,5 +603,53 @@ const styles: Record<string, React.CSSProperties> = {
     fontSize: "0.78rem",
     letterSpacing: "0.2em",
     fontWeight: 700,
+  },
+  // ── Enter CTA (curtain trigger) ──────────────────────────────────────────
+  enterBtn: {
+    position: "relative",
+    marginTop: 18,
+    display: "inline-flex",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 10,
+    padding: "13px 28px",
+    borderRadius: 999,
+    border: "1px solid rgba(253,230,138,.55)",
+    background:
+      "linear-gradient(135deg, #f59e0b 0%, #fbbf24 50%, #d97706 100%)",
+    color: "#1a1208",
+    fontFamily: "'Noto Serif Sinhala', 'Cinzel', serif",
+    fontWeight: 800,
+    fontSize: "clamp(0.85rem, 2.4vw, 1rem)",
+    letterSpacing: "0.04em",
+    cursor: "pointer",
+    boxShadow:
+      "0 10px 30px rgba(245,158,11,.35), 0 0 0 6px rgba(245,158,11,.10), inset 0 1px 0 rgba(255,255,255,.45)",
+    overflow: "hidden",
+    isolation: "isolate",
+    animation: "fadeUp 1s 1.5s both",
+    WebkitTapHighlightColor: "transparent",
+  },
+  enterBtnGlow: {
+    position: "absolute",
+    inset: -2,
+    borderRadius: 999,
+    background:
+      "radial-gradient(60% 80% at 50% 50%, rgba(255,255,255,.55), transparent 70%)",
+    opacity: 0.6,
+    zIndex: -1,
+    animation: "moonPulse 4s ease-in-out infinite",
+  },
+  enterBtnLabel: {
+    position: "relative",
+    zIndex: 1,
+  },
+  enterBtnArrow: {
+    position: "relative",
+    zIndex: 1,
+    fontFamily: "'Cinzel', serif",
+    fontWeight: 900,
+    fontSize: "1.05em",
+    transform: "translateY(-1px)",
   },
 };

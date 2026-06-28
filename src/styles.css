@@ -287,6 +287,72 @@
   }
 }
 
+/* ─── Poson curtain reveal (PosonWaiting → real app) ─────────────────────── */
+/*
+ * Two stacked, position-fixed panels each containing the full PosonWaiting.
+ * Each panel uses clip-path to show only its half of the page, then slides
+ * off-screen on `.open` — left half to the left, right half to the right —
+ * revealing the real app underneath.
+ *
+ * The `transform` on each panel establishes a containing block for the
+ * inner `position: fixed` PosonWaiting, so the inner page rides along with
+ * the slide instead of sticking to the viewport.
+ */
+.poson-curtain-root {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  pointer-events: none;
+}
+.poson-curtain {
+  position: fixed;
+  inset: 0;
+  pointer-events: auto;
+  transform: translate3d(0, 0, 0);
+  transition: transform 1.4s cubic-bezier(0.77, 0, 0.18, 1);
+  will-change: transform;
+  backface-visibility: hidden;
+}
+/* Overlap the halves by 0.5px so the seam is never visible on sub-pixel layouts. */
+.poson-curtain-left {
+  clip-path: inset(0 calc(50% - 0.5px) 0 0);
+}
+.poson-curtain-right {
+  clip-path: inset(0 0 0 calc(50% - 0.5px));
+}
+.poson-curtain-left.is-opening {
+  transform: translate3d(-101%, 0, 0);
+}
+.poson-curtain-right.is-opening {
+  transform: translate3d(101%, 0, 0);
+}
+
+/* Enter CTA on PosonWaiting — hover/active polish. */
+.poson-enter-btn {
+  transition:
+    transform 0.18s ease-out,
+    box-shadow 0.18s ease-out,
+    filter 0.18s ease-out;
+}
+.poson-enter-btn:hover {
+  transform: translateY(-1px);
+  filter: brightness(1.05);
+  box-shadow:
+    0 14px 36px rgba(245, 158, 11, 0.45),
+    0 0 0 7px rgba(245, 158, 11, 0.14),
+    inset 0 1px 0 rgba(255, 255, 255, 0.5);
+}
+.poson-enter-btn:active {
+  transform: translateY(0) scale(0.985);
+  filter: brightness(0.98);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .poson-curtain {
+    transition-duration: 0.25s;
+  }
+}
+
 /* ─── Global smoothness ──────────────────────────────────────────────────── */
 button,
 a,
